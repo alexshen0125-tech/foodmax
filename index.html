@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foodmax 产品原型</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f6fa; color: #1a1a2e; min-height: 100vh; }
+    header { background: #1a73e8; color: #fff; padding: 32px 40px; }
+    header h1 { font-size: 24px; font-weight: 600; }
+    header p { margin-top: 6px; font-size: 14px; opacity: 0.85; }
+    main { max-width: 900px; margin: 40px auto; padding: 0 24px; }
+    .section-title { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 48px; }
+    .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); text-decoration: none; color: inherit; transition: box-shadow .2s, transform .2s; display: flex; flex-direction: column; gap: 8px; }
+    .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); transform: translateY(-2px); }
+    .card .tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; width: fit-content; }
+    .tag.backend { background: #e8f0fe; color: #1a73e8; }
+    .tag.frontend { background: #e6f4ea; color: #188038; }
+    .tag.flow { background: #fce8e6; color: #c5221f; }
+    .card h3 { font-size: 16px; font-weight: 600; }
+    .card p { font-size: 13px; color: #666; line-height: 1.5; }
+    .card .arrow { margin-top: auto; font-size: 13px; color: #1a73e8; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Foodmax 产品原型</h1>
+    <p>供应商管理模块 · 供开发参考</p>
+  </header>
+  <main>
+    <p class="section-title">供应商管理</p>
+    <div class="cards">
+      <a class="card" href="供应商管理/供应商自助注册交互原型.html">
+        <span class="tag flow">完整流程</span>
+        <h3>供应商自助注册</h3>
+        <p>供应商通过邀请链接自助填写注册信息的完整交互流程</p>
+        <span class="arrow">查看原型 →</span>
+      </a>
+      <a class="card" href="供应商管理/前端-供应商信息填写.html">
+        <span class="tag frontend">前端 H5</span>
+        <h3>供应商信息填写</h3>
+        <p>手机端分步表单页面，适配微信 / WhatsApp 内置浏览器</p>
+        <span class="arrow">查看原型 →</span>
+      </a>
+      <a class="card" href="供应商管理/中后台-供应商注册管理.html">
+        <span class="tag backend">中后台</span>
+        <h3>供应商注册管理</h3>
+        <p>采购员审核、审批流程及邀请列表管理页面</p>
+        <span class="arrow">查看原型 →</span>
+      </a>
+    </div>
+  </main>
+</body>
+</html>
