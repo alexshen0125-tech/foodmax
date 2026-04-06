@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>供应商信息登记 - Foodmax</title>
+<!-- Open Graph for WeChat / WhatsApp card preview -->
+<meta property="og:title" content="Foodmax 供应商信息登记">
+<meta property="og:description" content="请点击填写供应商注册信息">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://scm.foodmax.com/og-supplier.png">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; background:#f0f7f6; color:#333; -webkit-font-smoothing:antialiased; }
+
+  /* === Header === */
+  .header { background:linear-gradient(135deg,#2d6a4f,#40916c); color:#fff; padding:28px 20px 22px; text-align:center; }
+  .header h1 { font-size:22px; font-weight:700; margin-bottom:4px; }
+  .header p { font-size:13px; opacity:.8; }
+  .header .buyer-tag { display:inline-block; background:rgba(255,255,255,.15); border-radius:20px; padding:5px 14px; margin-top:10px; font-size:12px; backdrop-filter:blur(4px); }
+
+  /* === Steps === */
+  .steps-bar { background:#fff; padding:14px 16px; display:flex; justify-content:center; align-items:center; gap:0; box-shadow:0 1px 4px rgba(0,0,0,.04); position:sticky; top:0; z-index:50; }
+  .step { display:flex; align-items:center; gap:6px; }
+  .step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; transition:all .3s; }
+  .step-dot.active { background:#4ecdc4; color:#fff; }
+  .step-dot.done { background:#52c41a; color:#fff; }
+  .step-dot.inactive { background:#e8e8e8; color:#999; }
+  .step-name { font-size:11px; color:#666; }
+  .step-line { width:32px; height:2px; background:#e8e8e8; margin:0 4px; }
+  .step-line.done { background:#52c41a; }
+
+  /* === Content === */
+  .content { max-width:640px; margin:0 auto; padding:16px; }
+
+  /* === Card === */
+  .card { background:#fff; border-radius:12px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,.05); overflow:hidden; }
+  .card-header { padding:14px 18px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px; }
+  .card-header .icon { font-size:16px; }
+  .card-header h3 { font-size:14px; font-weight:600; }
+  .card-body { padding:18px; }
+
+  /* === Form === */
+  .field { margin-bottom:16px; }
+  .field:last-child { margin-bottom:0; }
+  .field-label { font-size:12px; color:#666; margin-bottom:5px; display:block; }
+  .field-label .req { color:#ff4d4f; margin-right:2px; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  input[type="text"], input[type="tel"], input[type="date"], input[type="email"], select, textarea {
+    width:100%; padding:11px 14px; border:1px solid #e0e0e0; border-radius:8px; font-size:14px; transition:border-color .2s; background:#fff; -webkit-appearance:none;
+  }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:#4ecdc4; box-shadow:0 0 0 3px rgba(78,205,196,.12); }
+  input:disabled, select:disabled { background:#f5f5f5; color:#999; }
+  textarea { resize:vertical; min-height:70px; }
+  .radio-group { display:flex; gap:16px; padding:8px 0; }
+  .radio-group label { display:flex; align-items:center; gap:5px; font-size:14px; cursor:pointer; }
+  .select-row { display:flex; gap:8px; }
+  .select-row select { width:110px; flex-shrink:0; }
+  .select-row input { flex:1; }
+
+  /* === Upload === */
+  .upload-zone { border:2px dashed #d9d9d9; border-radius:10px; padding:24px; text-align:center; cursor:pointer; transition:all .2s; }
+  .upload-zone:hover, .upload-zone:active { border-color:#4ecdc4; background:#f0fffe; }
+  .upload-zone .up-icon { font-size:32px; color:#ccc; margin-bottom:6px; }
+  .upload-zone p { font-size:13px; color:#999; }
+  .upload-zone .hint { font-size:11px; color:#bbb; margin-top:4px; }
+  .file-item { display:flex; align-items:center; gap:8px; padding:8px 12px; background:#f6ffed; border-radius:6px; margin-top:8px; font-size:13px; }
+  .file-item .file-name { flex:1; color:#389e0d; }
+  .file-item .file-del { color:#ff4d4f; cursor:pointer; font-size:12px; }
+
+  /* === Cert Table === */
+  .cert-row { background:#fafafa; border-radius:8px; padding:12px; margin-bottom:8px; }
+  .cert-row .cert-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .cert-row .cert-fields select, .cert-row .cert-fields input { font-size:13px; padding:8px 10px; }
+  .cert-row .cert-file { margin-top:8px; font-size:12px; }
+
+  /* === Buttons === */
+  .btn-bar { padding:16px 0 32px; display:flex; flex-direction:column; gap:8px; }
+  .btn { width:100%; padding:14px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; transition:all .15s; text-align:center; }
+  .btn-primary { background:#4ecdc4; color:#fff; }
+  .btn-primary:hover { background:#3db8b0; }
+  .btn-primary:active { transform:scale(.98); }
+  .btn-success { background:#52c41a; color:#fff; }
+  .btn-draft { background:#f5f5f5; color:#666; }
+  .btn-draft:hover { background:#eee; }
+  .btn-back { background:transparent; color:#666; border:1px solid #d9d9d9; }
+  .btn-back:hover { color:#4ecdc4; border-color:#4ecdc4; }
+  .btn-sm { display:inline-block; width:auto; padding:6px 14px; font-size:12px; border-radius:6px; }
+  .btn-outline-sm { background:#fff; color:#4ecdc4; border:1px solid #4ecdc4; display:inline-block; width:auto; padding:6px 14px; font-size:12px; border-radius:6px; cursor:pointer; }
+
+  /* === Review summary === */
+  .summary-section { margin-bottom:14px; }
+  .summary-section h4 { font-size:13px; font-weight:600; margin-bottom:8px; color:#333; padding-left:2px; }
+  .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  .summary-item { padding:8px 2px; border-bottom:1px solid #f5f5f5; }
+  .summary-item .s-label { font-size:11px; color:#999; }
+  .summary-item .s-value { font-size:13px; color:#333; margin-top:1px; }
+
+  /* === Success === */
+  .success-view { text-align:center; padding:60px 20px 40px; }
+  .success-icon { font-size:56px; margin-bottom:12px; }
+  .success-view h2 { font-size:20px; margin-bottom:6px; }
+  .success-view p { color:#666; font-size:14px; margin-bottom:20px; }
+  .success-card { background:#fff; border-radius:10px; padding:18px; text-align:left; box-shadow:0 1px 4px rgba(0,0,0,.05); max-width:320px; margin:0 auto; }
+  .success-card p { font-size:13px; margin-bottom:4px; }
+
+  /* === Toast === */
+  .toast { position:fixed; top:16px; left:50%; transform:translateX(-50%); background:#52c41a; color:#fff; padding:10px 20px; border-radius:8px; font-size:13px; z-index:200; display:none; box-shadow:0 4px 16px rgba(0,0,0,.12); }
+  .toast.show { display:block; animation:toastIn .3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(-8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+  /* === Expired === */
+  .expired-view { text-align:center; padding:80px 20px; }
+  .expired-view .exp-icon { font-size:56px; margin-bottom:12px; color:#faad14; }
+  .expired-view h2 { font-size:20px; margin-bottom:6px; }
+  .expired-view p { color:#666; font-size:14px; }
+
+  /* === Responsive === */
+  @media(min-width:768px) {
+    .header { padding:36px 24px 28px; }
+    .header h1 { font-size:26px; }
+    .content { padding:20px 24px; }
+    .field-row { grid-template-columns:1fr 1fr; }
+    .btn-bar { flex-direction:row-reverse; }
+    .btn-bar .btn { width:auto; padding:14px 40px; }
+    .btn-bar .btn-back, .btn-bar .btn-draft { width:auto; }
+  }
+  @media(max-width:374px) {
+    .field-row { grid-template-columns:1fr; }
+    .step-name { display:none; }
+    .step-line { width:16px; }
+    .cert-row .cert-fields { grid-template-columns:1fr; }
+    .summary-grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <h1>供应商信息登记</h1>
+  <p>Foodmax 采购供应商注册 · 请如实填写以下信息</p>
+  <div class="buyer-tag">采购对接人：沈亮 · 小满新加坡(SG Xiaoman) · SGD</div>
+</div>
+
+<!-- ===== STEPS BAR ===== -->
+<div class="steps-bar">
+  <div class="step"><div class="step-dot active" id="sd1">1</div><span class="step-name">基本信息</span></div>
+  <div class="step-line" id="sln1"></div>
+  <div class="step"><div class="step-dot inactive" id="sd2">2</div><span class="step-name">结算信息</span></div>
+  <div class="step-line" id="sln2"></div>
+  <div class="step"><div class="step-dot inactive" id="sd3">3</div><span class="step-name">资质附件</span></div>
+  <div class="step-line" id="sln3"></div>
+  <div class="step"><div class="step-dot inactive" id="sd4">4</div><span class="step-name">确认提交</span></div>
+</div>
+
+<div class="content">
+
+<!-- ===== STEP 1: Basic Info ===== -->
+<div id="step-1">
+  <div class="card">
+    <div class="card-header"><span class="icon">🏢</span><h3>企业基本信息</h3></div>
+    <div class="card-body">
+      <div class="field">
+        <label class="field-label"><span class="req">*</span>供应商名称</label>
+        <input type="text" value="鲜达农产品有限公司" disabled>
+      </div>
+      <div class="field">
+        <label class="field-label">供应商名称（英文）</label>
+        <input type="text" placeholder="English company name">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">供应商简称</label>
+          <input type="text" placeholder="简称">
+        </div>
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>定价方式</label>
+          <select><option>含税</option><option>不含税</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label"><span class="req">*</span>供应商地址</label>
+        <input type="text" placeholder="请输入详细地址">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>联系人</label>
+          <input type="text" value="张经理">
+        </div>
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>联系方式</label>
+          <div class="select-row">
+            <select><option>手机</option><option>座机</option></select>
+            <input type="tel" placeholder="+65">
+          </div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>供应商单位类型</label>
+          <select><option value="">请选择</option><option>有限责任公司</option><option>股份有限公司</option><option>个体工商户</option><option>合伙企业</option></select>
+        </div>
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>纳税人类型</label>
+          <select><option value="">请选择</option><option>一般纳税人</option><option>小规模纳税人</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>唯一码识别号类型</label>
+          <select><option value="">请选择</option><option>统一社会信用代码</option><option>组织机构代码</option><option>营业执照注册号</option></select>
+        </div>
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>纳税人识别号</label>
+          <input type="text" placeholder="请输入">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">是否农业生产者</label>
+        <div class="radio-group">
+          <label><input type="radio" name="farmer" checked> 否</label>
+          <label><input type="radio" name="farmer"> 是</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-bar">
+    <button class="btn btn-primary" onclick="goStep(2)">下一步：结算信息</button>
+    <button class="btn btn-draft" onclick="showToast('草稿已保存')">保存草稿</button>
+  </div>
+</div>
+
+<!-- ===== STEP 2: Settlement Info ===== -->
+<div id="step-2" style="display:none">
+  <div class="card">
+    <div class="card-header"><span class="icon">💰</span><h3>结算信息</h3></div>
+    <div class="card-body">
+      <div class="field">
+        <label class="field-label"><span class="req">*</span>付款类型</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pay" checked> 后付费</label>
+          <label><input type="radio" name="pay"> 预付费</label>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>结算方式</label>
+          <select><option value="">请选择</option><option>月结</option><option>半月结</option><option>周结</option></select>
+        </div>
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>结算币种</label>
+          <select><option selected>SGD 新加坡元</option><option>CNY 人民币</option><option>USD 美元</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">财务联系人</label>
+          <input type="text" placeholder="财务联系人姓名">
+        </div>
+        <div class="field">
+          <label class="field-label">财务联系方式</label>
+          <input type="tel" placeholder="联系电话">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>账户名称</label>
+          <input type="text" placeholder="开户名">
+        </div>
+        <div class="field">
+          <label class="field-label">账户名称（英文）</label>
+          <input type="text" placeholder="Account Name">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">SWIFT 代码</label>
+          <input type="text" placeholder="如 OCBCSGSG">
+        </div>
+        <div class="field">
+          <label class="field-label">所属国家</label>
+          <select><option>新加坡</option><option>中国</option><option>马来西亚</option><option>其他</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label"><span class="req">*</span>银行收款号</label>
+        <input type="text" placeholder="请输入银行账号">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label"><span class="req">*</span>银行大类</label>
+          <select><option value="">请选择</option><option>OCBC 华侨银行</option><option>DBS 星展银行</option><option>UOB 大华银行</option><option>其他</option></select>
+        </div>
+        <div class="field">
+          <label class="field-label">银行支行</label>
+          <input type="text" placeholder="支行名称">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-bar">
+    <button class="btn btn-primary" onclick="goStep(3)">下一步：资质附件</button>
+    <button class="btn btn-draft" onclick="showToast('草稿已保存')">保存草稿</button>
+    <button class="btn btn-back" onclick="goStep(1)">上一步</button>
+  </div>
+</div>
+
+<!-- ===== STEP 3: Certs & Attachments ===== -->
+<div id="step-3" style="display:none">
+  <div class="card">
+    <div class="card-header"><span class="icon">📋</span><h3>资质证明</h3></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:#999;margin-bottom:12px">请上传企业资质，支持 PDF/JPG/PNG，单文件 ≤10MB</p>
+      <div id="cert-list">
+        <div class="cert-row">
+          <div class="cert-fields">
+            <select style="font-size:13px;padding:8px"><option>营业执照</option><option>食品经营许可证</option><option>卫生许可证</option><option>其他</option></select>
+            <input type="date" style="font-size:13px;padding:8px">
+          </div>
+          <div class="cert-file">
+            <div class="file-item">
+              <span class="file-name">营业执照.pdf ✓</span>
+              <span class="file-del">删除</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-outline-sm" style="margin-top:8px" onclick="showToast('已添加新资质行')">+ 添加资质</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="icon">📎</span><h3>附件资源</h3></div>
+    <div class="card-body">
+      <div class="upload-zone">
+        <div class="up-icon">📤</div>
+        <p>点击上传或拍照</p>
+        <p class="hint">支持 PDF、Word、Excel、图片</p>
+      </div>
+    </div>
+  </div>
+  <div class="btn-bar">
+    <button class="btn btn-primary" onclick="goStep(4)">下一步：确认提交</button>
+    <button class="btn btn-draft" onclick="showToast('草稿已保存')">保存草稿</button>
+    <button class="btn btn-back" onclick="goStep(2)">上一步</button>
+  </div>
+</div>
+
+<!-- ===== STEP 4: Confirm ===== -->
+<div id="step-4" style="display:none">
+  <div class="card">
+    <div class="card-header"><span class="icon">✅</span><h3>信息确认</h3></div>
+    <div class="card-body">
+      <p style="font-size:13px;color:#333;margin-bottom:14px">请确认以下信息无误后提交：</p>
+
+      <div class="summary-section">
+        <h4>企业基本信息</h4>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="s-label">供应商名称</div><div class="s-value">鲜达农产品有限公司</div></div>
+          <div class="summary-item"><div class="s-label">联系人</div><div class="s-value">张经理</div></div>
+          <div class="summary-item"><div class="s-label">联系方式</div><div class="s-value">+65 9123 4567</div></div>
+          <div class="summary-item"><div class="s-label">地址</div><div class="s-value">Jurong East St 21 #03-05</div></div>
+          <div class="summary-item"><div class="s-label">纳税人类型</div><div class="s-value">一般纳税人</div></div>
+          <div class="summary-item"><div class="s-label">定价方式</div><div class="s-value">含税</div></div>
+        </div>
+      </div>
+
+      <div class="summary-section">
+        <h4>结算信息</h4>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="s-label">付款类型</div><div class="s-value">后付费</div></div>
+          <div class="summary-item"><div class="s-label">结算方式</div><div class="s-value">月结</div></div>
+          <div class="summary-item"><div class="s-label">结算币种</div><div class="s-value">SGD</div></div>
+          <div class="summary-item"><div class="s-label">银行收款号</div><div class="s-value">****5678</div></div>
+        </div>
+      </div>
+
+      <div class="summary-section">
+        <h4>资质证明</h4>
+        <div class="file-item" style="margin-top:0"><span class="file-name">营业执照.pdf</span><span style="font-size:11px;color:#999">有效期至 2028-12-31</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-bar">
+    <button class="btn btn-success" onclick="submitForm()">确认提交</button>
+    <button class="btn btn-back" onclick="goStep(3)">返回修改</button>
+  </div>
+</div>
+
+<!-- ===== SUCCESS ===== -->
+<div id="step-success" style="display:none">
+  <div class="success-view">
+    <div class="success-icon">✅</div>
+    <h2>提交成功</h2>
+    <p>您的信息已提交，采购人员将在 1-3 个工作日内完成审核。</p>
+    <div class="success-card">
+      <p style="font-size:12px;color:#999;margin-bottom:6px">提交摘要</p>
+      <p><strong>供应商：</strong>鲜达农产品有限公司</p>
+      <p><strong>提交时间：</strong>2026-04-05 15:30</p>
+      <p><strong>对接采购：</strong>沈亮</p>
+      <p><strong>邀请编号：</strong>INV-20260401-001</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EXPIRED LINK PAGE (hidden demo) ===== -->
+<div id="step-expired" style="display:none">
+  <div class="expired-view">
+    <div class="exp-icon">⏰</div>
+    <h2>链接已过期</h2>
+    <p>此供应商注册链接已超过有效期，请联系采购人员获取新的链接。</p>
+    <div style="margin-top:20px;background:#fff;border-radius:10px;padding:16px;display:inline-block;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <p style="font-size:13px;color:#666">采购对接人：<strong>沈亮</strong></p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+  let cur = 1;
+  function goStep(n) {
+    document.getElementById('step-'+cur).style.display='none';
+    document.getElementById('step-'+n).style.display='block';
+    for(let i=1;i<=4;i++){
+      const d=document.getElementById('sd'+i);
+      const l=document.getElementById('sln'+(i-1));
+      if(i<n){d.className='step-dot done';d.textContent='✓';if(l)l.className='step-line done'}
+      else if(i===n){d.className='step-dot active';d.textContent=i;if(l)l.className='step-line done'}
+      else{d.className='step-dot inactive';d.textContent=i;if(l)l.className='step-line'}
+    }
+    cur=n;
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function submitForm(){
+    document.getElementById('step-4').style.display='none';
+    document.querySelector('.steps-bar').style.display='none';
+    document.getElementById('step-success').style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+</script>
+</body>
+</html>

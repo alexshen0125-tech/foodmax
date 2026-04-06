@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>供应商自助注册 - 交互原型</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background:#f0f2f5; color:#333; }
+
+  /* === Navigation === */
+  .proto-nav { position:fixed; top:0; left:0; right:0; background:#1a1a2e; color:#fff; z-index:1000; padding:0 24px; display:flex; align-items:center; height:56px; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+  .proto-nav .logo { font-size:18px; font-weight:700; margin-right:32px; color:#4ecdc4; }
+  .proto-nav .nav-tabs { display:flex; gap:4px; }
+  .proto-nav .nav-tab { padding:8px 20px; border-radius:8px 8px 0 0; cursor:pointer; font-size:13px; transition:all .2s; color:#aaa; background:transparent; border:none; }
+  .proto-nav .nav-tab:hover { color:#fff; background:rgba(255,255,255,.08); }
+  .proto-nav .nav-tab.active { color:#fff; background:#4ecdc4; }
+  .proto-nav .flow-hint { margin-left:auto; font-size:12px; color:#888; }
+  .proto-nav .flow-hint span { color:#4ecdc4; }
+
+  /* === Page Container === */
+  .page { display:none; padding-top:72px; min-height:100vh; }
+  .page.active { display:block; }
+
+  /* === Flow Diagram Page === */
+  .flow-page { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); padding-top:72px; }
+  .flow-header { text-align:center; color:#fff; padding:40px 20px 20px; }
+  .flow-header h1 { font-size:28px; margin-bottom:8px; }
+  .flow-header p { opacity:.8; font-size:15px; }
+  .flow-container { max-width:1000px; margin:0 auto; padding:20px; }
+  .flow-steps { display:flex; flex-direction:column; gap:16px; }
+  .flow-row { display:flex; align-items:center; gap:12px; }
+  .flow-card { background:rgba(255,255,255,.95); border-radius:12px; padding:20px 24px; flex:1; box-shadow:0 4px 16px rgba(0,0,0,.1); cursor:pointer; transition:all .25s; position:relative; }
+  .flow-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.15); }
+  .flow-card .step-num { display:inline-block; background:#4ecdc4; color:#fff; width:28px; height:28px; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; margin-right:10px; }
+  .flow-card .step-title { font-size:16px; font-weight:600; display:inline; }
+  .flow-card .step-desc { color:#666; font-size:13px; margin-top:8px; line-height:1.6; }
+  .flow-card .step-role { display:inline-block; font-size:11px; padding:2px 8px; border-radius:4px; margin-top:8px; }
+  .role-buyer { background:#e8f5e9; color:#2e7d32; }
+  .role-supplier { background:#e3f2fd; color:#1565c0; }
+  .role-system { background:#fff3e0; color:#e65100; }
+  .flow-arrow { font-size:24px; color:rgba(255,255,255,.7); text-align:center; padding:4px 0; }
+  .flow-arrow-right { font-size:20px; color:#ccc; }
+  .flow-legend { display:flex; justify-content:center; gap:24px; margin-top:24px; padding-bottom:32px; }
+  .flow-legend-item { display:flex; align-items:center; gap:6px; color:#fff; font-size:13px; }
+  .flow-legend-dot { width:12px; height:12px; border-radius:50%; }
+
+  /* === Procurement Pages === */
+  .procurement-page { background:#f5f7fa; }
+  .page-header { background:#fff; border-bottom:1px solid #e8e8e8; padding:20px 32px; display:flex; align-items:center; justify-content:space-between; }
+  .page-header h2 { font-size:18px; }
+  .breadcrumb { font-size:13px; color:#999; margin-bottom:4px; }
+  .content-area { max-width:1100px; margin:24px auto; padding:0 24px; }
+
+  /* Table styles */
+  .data-table { width:100%; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .data-table th { background:#fafafa; padding:12px 16px; text-align:left; font-size:13px; font-weight:600; color:#666; border-bottom:1px solid #e8e8e8; }
+  .data-table td { padding:12px 16px; font-size:13px; border-bottom:1px solid #f0f0f0; }
+  .data-table tr:hover td { background:#f9fbff; }
+
+  /* Status badges */
+  .badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:500; }
+  .badge-pending { background:#fff7e6; color:#d48806; }
+  .badge-approved { background:#f6ffed; color:#389e0d; }
+  .badge-draft { background:#f0f0f0; color:#666; }
+  .badge-rejected { background:#fff1f0; color:#cf1322; }
+
+  /* Buttons */
+  .btn { padding:8px 20px; border-radius:6px; border:none; cursor:pointer; font-size:13px; font-weight:500; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
+  .btn-primary { background:#4ecdc4; color:#fff; }
+  .btn-primary:hover { background:#3db8b0; }
+  .btn-outline { background:#fff; color:#4ecdc4; border:1px solid #4ecdc4; }
+  .btn-outline:hover { background:#f0fffe; }
+  .btn-danger { background:#fff; color:#cf1322; border:1px solid #ffccc7; }
+  .btn-danger:hover { background:#fff1f0; }
+  .btn-sm { padding:5px 12px; font-size:12px; }
+  .btn-lg { padding:12px 32px; font-size:15px; }
+  .btn-ghost { background:transparent; color:#666; border:1px solid #d9d9d9; }
+  .btn-ghost:hover { color:#4ecdc4; border-color:#4ecdc4; }
+
+  /* === Modal === */
+  .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.45); z-index:2000; display:none; align-items:center; justify-content:center; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:#fff; border-radius:12px; width:520px; max-height:80vh; overflow:auto; box-shadow:0 12px 48px rgba(0,0,0,.15); }
+  .modal-header { padding:20px 24px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; }
+  .modal-header h3 { font-size:16px; }
+  .modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:#999; }
+  .modal-body { padding:24px; }
+  .modal-footer { padding:16px 24px; border-top:1px solid #f0f0f0; display:flex; justify-content:flex-end; gap:8px; }
+
+  /* === Form Styles === */
+  .form-section { background:#fff; border-radius:8px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .form-section-header { padding:16px 24px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px; }
+  .form-section-header h3 { font-size:15px; font-weight:600; }
+  .form-section-header .icon { font-size:18px; }
+  .form-section-body { padding:24px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px 24px; }
+  .form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px 24px; }
+  .form-group { display:flex; flex-direction:column; }
+  .form-group.full-width { grid-column: 1 / -1; }
+  .form-label { font-size:13px; color:#666; margin-bottom:6px; }
+  .form-label .required { color:#ff4d4f; margin-right:2px; }
+  .form-input { padding:8px 12px; border:1px solid #d9d9d9; border-radius:6px; font-size:13px; transition:border-color .2s; background:#fff; }
+  .form-input:focus { outline:none; border-color:#4ecdc4; box-shadow:0 0 0 2px rgba(78,205,196,.15); }
+  .form-input:disabled { background:#f5f5f5; color:#999; }
+  .form-select { padding:8px 12px; border:1px solid #d9d9d9; border-radius:6px; font-size:13px; background:#fff; appearance:auto; }
+  .form-radio-group { display:flex; gap:16px; align-items:center; padding:8px 0; }
+  .form-radio-group label { display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; }
+  .form-textarea { padding:8px 12px; border:1px solid #d9d9d9; border-radius:6px; font-size:13px; resize:vertical; min-height:80px; }
+
+  /* Upload area */
+  .upload-area { border:2px dashed #d9d9d9; border-radius:8px; padding:32px; text-align:center; cursor:pointer; transition:all .2s; }
+  .upload-area:hover { border-color:#4ecdc4; background:#f0fffe; }
+  .upload-area .upload-icon { font-size:36px; color:#ccc; margin-bottom:8px; }
+  .upload-area p { font-size:13px; color:#999; }
+
+  /* === Supplier Form Page === */
+  .supplier-page { background:#f0f7f6; }
+  .supplier-header { background:linear-gradient(135deg,#2d6a4f,#40916c); color:#fff; padding:32px; text-align:center; }
+  .supplier-header h1 { font-size:24px; margin-bottom:8px; }
+  .supplier-header p { opacity:.8; font-size:14px; }
+  .supplier-content { max-width:800px; margin:0 auto; padding:24px; }
+  .step-indicator { display:flex; justify-content:center; gap:0; margin:24px 0; }
+  .step-item { display:flex; align-items:center; }
+  .step-circle { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; transition:all .3s; }
+  .step-circle.active { background:#4ecdc4; color:#fff; }
+  .step-circle.done { background:#52c41a; color:#fff; }
+  .step-circle.inactive { background:#e8e8e8; color:#999; }
+  .step-label { font-size:12px; margin-left:8px; color:#666; }
+  .step-line { width:60px; height:2px; background:#e8e8e8; margin:0 8px; align-self:center; }
+  .step-line.done { background:#52c41a; }
+
+  /* === Review Page === */
+  .review-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 24px; }
+  .review-item { display:flex; flex-direction:column; padding:8px 0; border-bottom:1px solid #f5f5f5; }
+  .review-item .label { font-size:12px; color:#999; margin-bottom:2px; }
+  .review-item .value { font-size:14px; color:#333; }
+  .review-item .value.empty { color:#ccc; font-style:italic; }
+  .review-actions { background:#fff; border-radius:8px; padding:24px; margin-top:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .review-actions h4 { font-size:14px; margin-bottom:12px; }
+
+  /* === Toast === */
+  .toast { position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#52c41a; color:#fff; padding:12px 24px; border-radius:8px; font-size:14px; z-index:3000; display:none; box-shadow:0 4px 16px rgba(0,0,0,.15); }
+  .toast.show { display:block; animation:slideDown .3s ease; }
+  @keyframes slideDown { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+  /* === Link copy area === */
+  .link-box { background:#f6ffed; border:1px solid #b7eb8f; border-radius:8px; padding:16px; margin-top:16px; }
+  .link-box .link-url { background:#fff; border:1px solid #d9d9d9; border-radius:6px; padding:10px 14px; font-size:13px; color:#1890ff; word-break:break-all; display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+  .link-box .link-url span { flex:1; }
+
+  /* Success page */
+  .success-page { text-align:center; padding:80px 20px; }
+  .success-icon { font-size:64px; color:#52c41a; margin-bottom:16px; }
+  .success-page h2 { font-size:22px; margin-bottom:8px; }
+  .success-page p { color:#666; font-size:14px; }
+
+  /* Notification dot */
+  .notif-dot { width:8px; height:8px; background:#ff4d4f; border-radius:50%; display:inline-block; margin-left:4px; vertical-align:top; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:0; border-bottom:2px solid #f0f0f0; margin-bottom:20px; }
+  .tab-item { padding:12px 24px; cursor:pointer; font-size:14px; color:#666; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .2s; }
+  .tab-item.active { color:#4ecdc4; border-bottom-color:#4ecdc4; font-weight:500; }
+  .tab-item:hover { color:#4ecdc4; }
+
+  /* Timeline */
+  .timeline { padding:16px 0; }
+  .timeline-item { display:flex; gap:12px; padding-bottom:20px; position:relative; }
+  .timeline-item:not(:last-child)::after { content:''; position:absolute; left:15px; top:32px; bottom:0; width:1px; background:#e8e8e8; }
+  .timeline-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .timeline-dot.green { background:#f6ffed; color:#52c41a; }
+  .timeline-dot.blue { background:#e6f7ff; color:#1890ff; }
+  .timeline-dot.orange { background:#fff7e6; color:#fa8c16; }
+  .timeline-content { flex:1; }
+  .timeline-content .title { font-size:14px; font-weight:500; }
+  .timeline-content .desc { font-size:12px; color:#999; margin-top:2px; }
+
+  /* Editable highlight */
+  .editable-highlight { position:relative; }
+  .editable-highlight .form-input:not(:disabled),
+  .editable-highlight .form-select:not(:disabled) { border-color:#faad14; background:#fffbe6; }
+  .edit-badge { position:absolute; top:-8px; right:-8px; background:#faad14; color:#fff; font-size:10px; padding:1px 6px; border-radius:4px; }
+
+  /* Empty state */
+  .empty-state { text-align:center; padding:48px; color:#ccc; }
+  .empty-state .empty-icon { font-size:48px; margin-bottom:12px; }
+
+  /* Animations */
+  .fade-in { animation: fadeIn .4s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* === Share Buttons === */
+  .share-buttons { display:flex; gap:10px; margin-top:16px; }
+  .share-btn { flex:1; padding:12px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s; }
+  .share-btn:hover { opacity:.85; transform:translateY(-1px); }
+  .share-btn-whatsapp { background:#25D366; color:#fff; }
+  .share-btn-wechat { background:#07C160; color:#fff; }
+  .share-btn-copy { background:#f0f0f0; color:#333; }
+  .share-btn-email { background:#4A90D9; color:#fff; }
+  .share-btn-sms { background:#FF9500; color:#fff; }
+
+  /* Mobile preview frame */
+  .mobile-frame { width:320px; margin:0 auto; background:#fff; border-radius:24px; border:3px solid #333; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.15); }
+  .mobile-frame-notch { height:28px; background:#333; border-radius:0 0 16px 16px; width:120px; margin:0 auto; }
+  .mobile-frame-content { height:520px; overflow-y:auto; }
+  .mobile-frame-bar { height:44px; background:#f7f7f7; border-bottom:1px solid #e8e8e8; display:flex; align-items:center; padding:0 12px; gap:8px; }
+  .mobile-frame-bar .back-arrow { font-size:18px; color:#333; }
+  .mobile-frame-bar .bar-title { font-size:14px; font-weight:500; flex:1; text-align:center; }
+  .mobile-frame-bar .bar-dots { font-size:16px; color:#999; }
+
+  /* WeChat/WhatsApp in-app style header */
+  .mobile-supplier-header { background:linear-gradient(135deg,#2d6a4f,#40916c); color:#fff; padding:20px 16px; text-align:center; }
+  .mobile-supplier-header h2 { font-size:17px; margin-bottom:4px; }
+  .mobile-supplier-header p { font-size:12px; opacity:.8; }
+  .mobile-form-body { padding:12px; }
+  .mobile-form-body .m-form-group { margin-bottom:12px; }
+  .mobile-form-body .m-label { font-size:12px; color:#666; margin-bottom:4px; display:block; }
+  .mobile-form-body .m-input { width:100%; padding:10px 12px; border:1px solid #e0e0e0; border-radius:8px; font-size:14px; }
+  .mobile-form-body .m-select { width:100%; padding:10px 12px; border:1px solid #e0e0e0; border-radius:8px; font-size:14px; background:#fff; }
+  .mobile-form-body .m-btn { width:100%; padding:14px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; }
+  .mobile-form-body .m-btn-primary { background:#4ecdc4; color:#fff; }
+  .mobile-form-body .m-btn-draft { background:#f5f5f5; color:#666; margin-top:8px; }
+  .mobile-step-bar { display:flex; justify-content:center; gap:6px; padding:12px; background:#fafafa; }
+  .mobile-step-dot { width:8px; height:8px; border-radius:50%; background:#ddd; }
+  .mobile-step-dot.active { background:#4ecdc4; width:24px; border-radius:4px; }
+
+  /* Share preview card */
+  .share-preview { background:#fff; border-radius:12px; border:1px solid #e8e8e8; overflow:hidden; margin-top:16px; }
+  .share-preview-header { padding:12px 16px; background:#fafafa; border-bottom:1px solid #f0f0f0; font-size:12px; color:#999; }
+  .share-preview-body { padding:16px; display:flex; gap:12px; }
+  .share-preview-body .preview-icon { width:48px; height:48px; background:linear-gradient(135deg,#2d6a4f,#40916c); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; flex-shrink:0; }
+  .share-preview-body .preview-text h4 { font-size:14px; margin-bottom:4px; }
+  .share-preview-body .preview-text p { font-size:12px; color:#999; line-height:1.4; }
+
+  /* Responsive */
+  @media(max-width:768px) {
+    .form-grid,.form-grid-3,.review-info-grid { grid-template-columns:1fr; }
+    .flow-row { flex-direction:column; }
+    .proto-nav .nav-tabs { overflow-x:auto; }
+    .proto-nav { padding:0 8px; height:48px; }
+    .proto-nav .logo { font-size:14px; margin-right:12px; }
+    .proto-nav .nav-tab { padding:6px 10px; font-size:11px; }
+    .proto-nav .flow-hint { display:none; }
+    .supplier-header h1 { font-size:20px; }
+    .supplier-content { padding:12px; }
+    .form-section-body { padding:16px; }
+    .form-grid { gap:12px; }
+    .step-indicator { gap:0; }
+    .step-label { font-size:10px; }
+    .step-line { width:24px; }
+    .btn-lg { padding:14px 24px; width:100%; justify-content:center; }
+    .upload-area { padding:20px; }
+    .share-buttons { flex-wrap:wrap; }
+    .share-btn { min-width:calc(50% - 5px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<nav class="proto-nav">
+  <div class="logo">Foodmax SCM</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('flow')">流程总览</button>
+    <button class="nav-tab" onclick="showPage('invite')">① 采购发起邀请</button>
+    <button class="nav-tab" onclick="showPage('supplier-form')">② 供应商填写(PC)</button>
+    <button class="nav-tab" onclick="showPage('mobile-preview')">② 供应商填写(手机)</button>
+    <button class="nav-tab" onclick="showPage('review')">③ 采购审核</button>
+    <button class="nav-tab" onclick="showPage('list')">④ 供应商列表</button>
+  </div>
+  <div class="flow-hint">交互原型 · <span>点击顶部标签切换页面</span></div>
+</nav>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast"></div>
+
+<!-- ============ PAGE 0: FLOW OVERVIEW ============ -->
+<div class="page flow-page active" id="page-flow">
+  <div class="flow-header">
+    <h1>供应商自助注册 · 流程设计</h1>
+    <p>从线下 PDF → 线上化，提升采购协作效率</p>
+  </div>
+  <div class="flow-container fade-in">
+    <div class="flow-steps">
+      <!-- Step 1 -->
+      <div class="flow-card" onclick="showPage('invite')">
+        <span class="step-num">1</span>
+        <h4 class="step-title">采购发起邀请</h4>
+        <div class="step-desc">采购人员在系统中创建供应商注册邀请，系统自动生成唯一短链接和二维码。链接自动携带采购人员、站点、币种等信息。采购将链接或二维码通过 WhatsApp / 微信发送给供应商即可。链接支持 Open Graph 富媒体卡片预览。</div>
+        <span class="step-role role-buyer">采购操作</span>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <!-- Step 2 -->
+      <div class="flow-card" onclick="showPage('supplier-form')">
+        <span class="step-num">2</span>
+        <h4 class="step-title">供应商填写信息</h4>
+        <div class="step-desc">供应商通过 WhatsApp/微信/浏览器打开链接（无需登录），表单已做移动端适配，分步填写基本信息、结算信息、上传资质证明和附件，最后确认提交。支持手机拍照上传资质、暂存草稿防止丢失。</div>
+        <span class="step-role role-supplier">供应商操作</span>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <!-- Step 3 -->
+      <div class="flow-row">
+        <div class="flow-card" onclick="showPage('review')" style="flex:2">
+          <span class="step-num">3</span>
+          <h4 class="step-title">采购审核信息</h4>
+          <div class="step-desc">供应商提交后采购人员收到通知。审核页面展示供应商填写的所有信息，采购人员可直接修改不合规内容后通过，或补充系统内部字段（如供应商等级、合同扣点等），无需退回给供应商。</div>
+          <span class="step-role role-buyer">采购操作</span>
+        </div>
+        <div class="flow-arrow-right">→</div>
+        <div class="flow-card" style="flex:1; background:rgba(255,255,255,.8)">
+          <span class="step-num" style="background:#faad14">!</span>
+          <h4 class="step-title">信息不合规</h4>
+          <div class="step-desc">采购直接在审核页面修改，无需退回供应商。修改内容系统留痕。</div>
+          <span class="step-role role-buyer">采购修改</span>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <!-- Step 4 -->
+      <div class="flow-card" onclick="showPage('list')">
+        <span class="step-num">4</span>
+        <h4 class="step-title">审核通过 → 自动建档</h4>
+        <div class="step-desc">审核通过后系统自动创建供应商档案，生成供应商ID，数据直接同步至供应商管理模块，无需人工二次录入。</div>
+        <span class="step-role role-system">系统自动</span>
+      </div>
+    </div>
+
+    <div class="flow-legend">
+      <div class="flow-legend-item"><div class="flow-legend-dot" style="background:#2e7d32"></div> 采购操作</div>
+      <div class="flow-legend-item"><div class="flow-legend-dot" style="background:#1565c0"></div> 供应商操作</div>
+      <div class="flow-legend-item"><div class="flow-legend-dot" style="background:#e65100"></div> 系统自动</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 1: PROCUREMENT - INVITE ============ -->
+<div class="page procurement-page" id="page-invite">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">供应商管理 / 注册邀请</div>
+      <h2>供应商注册邀请管理</h2>
+    </div>
+    <button class="btn btn-primary" onclick="showModal('invite-modal')">+ 新建邀请</button>
+  </div>
+  <div class="content-area fade-in">
+    <!-- Filter bar -->
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center">
+      <input class="form-input" placeholder="搜索供应商名称..." style="width:240px">
+      <select class="form-select"><option>全部状态</option><option>待填写</option><option>已提交待审核</option><option>已通过</option></select>
+      <button class="btn btn-ghost btn-sm">搜索</button>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>邀请编号</th>
+          <th>供应商名称</th>
+          <th>联系人</th>
+          <th>发起人</th>
+          <th>发起时间</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>INV-20260401-001</td>
+          <td>鲜达农产品有限公司</td>
+          <td>张经理</td>
+          <td>沈亮</td>
+          <td>2026-04-01 14:30</td>
+          <td><span class="badge badge-pending">已提交待审核</span><span class="notif-dot"></span></td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="showPage('review')">去审核</button>
+          </td>
+        </tr>
+        <tr>
+          <td>INV-20260401-002</td>
+          <td>绿源食品科技公司</td>
+          <td>李总</td>
+          <td>沈亮</td>
+          <td>2026-04-01 10:15</td>
+          <td><span class="badge badge-draft">待填写</span></td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="showToast('链接已复制到剪贴板')">复制链接</button>
+            <button class="btn btn-ghost btn-sm" onclick="showModal('link-modal')">二维码</button>
+          </td>
+        </tr>
+        <tr>
+          <td>INV-20260330-005</td>
+          <td>汇丰水产贸易公司</td>
+          <td>王经理</td>
+          <td>陈晓</td>
+          <td>2026-03-30 09:20</td>
+          <td><span class="badge badge-approved">已通过</span></td>
+          <td>
+            <button class="btn btn-ghost btn-sm">查看详情</button>
+          </td>
+        </tr>
+        <tr>
+          <td>INV-20260328-003</td>
+          <td>优选食材供应链</td>
+          <td>赵经理</td>
+          <td>沈亮</td>
+          <td>2026-03-28 16:45</td>
+          <td><span class="badge badge-approved">已通过</span></td>
+          <td>
+            <button class="btn btn-ghost btn-sm">查看详情</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Invite Modal -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>新建供应商注册邀请</h3>
+      <button class="modal-close" onclick="hideModal('invite-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="form-group">
+          <label class="form-label"><span class="required">*</span>供应商名称</label>
+          <input class="form-input" placeholder="请输入拟邀请的供应商名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><span class="required">*</span>联系人</label>
+          <input class="form-input" placeholder="供应商联系人姓名">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">联系方式</label>
+            <input class="form-input" placeholder="手机号/邮箱">
+          </div>
+          <div class="form-group">
+            <label class="form-label">链接有效期</label>
+            <select class="form-select">
+              <option>7天</option>
+              <option>14天</option>
+              <option>30天</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">备注</label>
+          <textarea class="form-textarea" placeholder="可填写备注信息，供应商填写时可见" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('invite-modal')">取消</button>
+      <button class="btn btn-primary" onclick="createInvite()">生成链接与二维码</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link & QR Generated Modal -->
+<div class="modal-overlay" id="link-modal">
+  <div class="modal" style="width:580px">
+    <div class="modal-header">
+      <h3>邀请链接与二维码</h3>
+      <button class="modal-close" onclick="hideModal('link-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Buyer info embedded in link -->
+      <div style="background:#f0f7ff;border:1px solid #bae0ff;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+        <div style="font-weight:600;color:#1677ff;margin-bottom:6px">链接已绑定采购人信息</div>
+        <div style="display:flex;gap:24px;color:#555">
+          <span>采购员：<strong>沈亮</strong></span>
+          <span>站点：<strong>小满新加坡</strong></span>
+          <span>币种：<strong>SGD</strong></span>
+        </div>
+        <div style="color:#999;margin-top:4px;font-size:11px">供应商打开表单后将自动关联以上信息，无需手动选择</div>
+      </div>
+
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <!-- Left: Link -->
+        <div style="flex:1">
+          <div class="link-box" style="margin-top:0">
+            <div style="font-size:13px;color:#389e0d;font-weight:500">供应商填写链接</div>
+            <div class="link-url">
+              <span>https://scm.foodmax.com/s/INV20260405006</span>
+            </div>
+            <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;justify-content:center" onclick="showToast('链接已复制到剪贴板')">复制链接</button>
+          </div>
+
+          <!-- Preview card -->
+          <div class="share-preview" style="margin-top:12px">
+            <div class="share-preview-header">供应商在微信 / WhatsApp 中看到的效果</div>
+            <div class="share-preview-body">
+              <div class="preview-icon">F</div>
+              <div class="preview-text">
+                <h4>Foodmax 供应商信息登记</h4>
+                <p>鲜达农产品有限公司 — 请点击填写供应商注册信息（采购对接人：沈亮）</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: QR Code -->
+        <div style="flex-shrink:0;text-align:center">
+          <div style="width:160px;height:160px;background:#fff;border:1px solid #e8e8e8;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative">
+            <!-- Simulated QR code pattern -->
+            <svg width="130" height="130" viewBox="0 0 130 130">
+              <rect width="130" height="130" fill="#fff"/>
+              <!-- QR code simulation using small rects -->
+              <g fill="#333">
+                <!-- Position patterns (top-left) -->
+                <rect x="5" y="5" width="30" height="30" rx="2"/>
+                <rect x="9" y="9" width="22" height="22" fill="#fff" rx="1"/>
+                <rect x="13" y="13" width="14" height="14" rx="1"/>
+                <!-- Position patterns (top-right) -->
+                <rect x="95" y="5" width="30" height="30" rx="2"/>
+                <rect x="99" y="9" width="22" height="22" fill="#fff" rx="1"/>
+                <rect x="103" y="13" width="14" height="14" rx="1"/>
+                <!-- Position patterns (bottom-left) -->
+                <rect x="5" y="95" width="30" height="30" rx="2"/>
+                <rect x="9" y="99" width="22" height="22" fill="#fff" rx="1"/>
+                <rect x="13" y="103" width="14" height="14" rx="1"/>
+                <!-- Data modules (simulated) -->
+                <rect x="40" y="8" width="5" height="5"/><rect x="50" y="8" width="5" height="5"/><rect x="60" y="8" width="5" height="5"/><rect x="70" y="8" width="5" height="5"/><rect x="80" y="8" width="5" height="5"/>
+                <rect x="40" y="18" width="5" height="5"/><rect x="55" y="18" width="5" height="5"/><rect x="65" y="18" width="5" height="5"/><rect x="80" y="18" width="5" height="5"/>
+                <rect x="45" y="28" width="5" height="5"/><rect x="55" y="28" width="5" height="5"/><rect x="70" y="28" width="5" height="5"/><rect x="85" y="28" width="5" height="5"/>
+                <rect x="8" y="40" width="5" height="5"/><rect x="18" y="40" width="5" height="5"/><rect x="28" y="40" width="5" height="5"/><rect x="40" y="40" width="5" height="5"/><rect x="55" y="40" width="5" height="5"/><rect x="65" y="40" width="5" height="5"/><rect x="80" y="40" width="5" height="5"/><rect x="95" y="40" width="5" height="5"/><rect x="110" y="40" width="5" height="5"/><rect x="120" y="40" width="5" height="5"/>
+                <rect x="8" y="50" width="5" height="5"/><rect x="25" y="50" width="5" height="5"/><rect x="45" y="50" width="5" height="5"/><rect x="60" y="50" width="5" height="5"/><rect x="75" y="50" width="5" height="5"/><rect x="95" y="50" width="5" height="5"/><rect x="115" y="50" width="5" height="5"/>
+                <rect x="8" y="60" width="5" height="5"/><rect x="20" y="60" width="5" height="5"/><rect x="35" y="60" width="5" height="5"/><rect x="50" y="60" width="5" height="5"/><rect x="65" y="60" width="5" height="5"/><rect x="80" y="60" width="5" height="5"/><rect x="100" y="60" width="5" height="5"/><rect x="115" y="60" width="5" height="5"/>
+                <rect x="15" y="70" width="5" height="5"/><rect x="28" y="70" width="5" height="5"/><rect x="45" y="70" width="5" height="5"/><rect x="55" y="70" width="5" height="5"/><rect x="70" y="70" width="5" height="5"/><rect x="90" y="70" width="5" height="5"/><rect x="105" y="70" width="5" height="5"/><rect x="120" y="70" width="5" height="5"/>
+                <rect x="8" y="80" width="5" height="5"/><rect x="20" y="80" width="5" height="5"/><rect x="40" y="80" width="5" height="5"/><rect x="60" y="80" width="5" height="5"/><rect x="75" y="80" width="5" height="5"/><rect x="95" y="80" width="5" height="5"/><rect x="110" y="80" width="5" height="5"/>
+                <rect x="40" y="95" width="5" height="5"/><rect x="55" y="95" width="5" height="5"/><rect x="70" y="95" width="5" height="5"/><rect x="85" y="95" width="5" height="5"/><rect x="100" y="95" width="5" height="5"/><rect x="115" y="95" width="5" height="5"/>
+                <rect x="45" y="105" width="5" height="5"/><rect x="60" y="105" width="5" height="5"/><rect x="75" y="105" width="5" height="5"/><rect x="90" y="105" width="5" height="5"/><rect x="110" y="105" width="5" height="5"/>
+                <rect x="40" y="115" width="5" height="5"/><rect x="50" y="115" width="5" height="5"/><rect x="65" y="115" width="5" height="5"/><rect x="80" y="115" width="5" height="5"/><rect x="95" y="115" width="5" height="5"/><rect x="120" y="115" width="5" height="5"/>
+              </g>
+              <!-- Center logo -->
+              <rect x="50" y="50" width="30" height="30" rx="4" fill="#4ecdc4"/>
+              <text x="65" y="70" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">F</text>
+            </svg>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:8px;width:160px;justify-content:center" onclick="showToast('二维码图片已下载')">下载二维码</button>
+          <p style="font-size:11px;color:#999;margin-top:6px;width:160px">微信扫码或 WhatsApp<br>直接发送图片均可使用</p>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;padding:12px 16px;background:#fffbe6;border:1px solid #ffe58f;border-radius:8px;font-size:12px;color:#ad8b00">
+        <strong>使用方式：</strong>复制链接通过 WhatsApp/微信发送给供应商，或下载二维码让供应商扫码打开。表单已适配微信和 WhatsApp 内置浏览器，供应商可在手机端直接填写。
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#999">
+        <p>· 链接有效期至 2026-04-12 23:59 · 无需登录即可填写</p>
+        <p>· 供应商提交后，采购员 沈亮 将收到系统通知</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('link-modal')">关闭</button>
+      <button class="btn btn-outline btn-sm" onclick="showPage('mobile-preview');hideModal('link-modal')">预览手机端效果</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 2: SUPPLIER FORM ============ -->
+<div class="page supplier-page" id="page-supplier-form">
+  <div class="supplier-header">
+    <h1>供应商信息登记</h1>
+    <p>Foodmax 采购供应商注册 · 请如实填写以下信息</p>
+    <div style="display:inline-block;background:rgba(255,255,255,.15);border-radius:6px;padding:6px 16px;margin-top:10px;font-size:12px">
+      采购对接人：沈亮 · 小满新加坡(SG Xiaoman) · 币种：SGD
+    </div>
+  </div>
+  <div class="supplier-content fade-in">
+    <!-- Steps -->
+    <div class="step-indicator">
+      <div class="step-item">
+        <div class="step-circle active" id="sc1">1</div>
+        <span class="step-label">基本信息</span>
+      </div>
+      <div class="step-line" id="sl1"></div>
+      <div class="step-item">
+        <div class="step-circle inactive" id="sc2">2</div>
+        <span class="step-label">结算信息</span>
+      </div>
+      <div class="step-line" id="sl2"></div>
+      <div class="step-item">
+        <div class="step-circle inactive" id="sc3">3</div>
+        <span class="step-label">资质附件</span>
+      </div>
+      <div class="step-line" id="sl3"></div>
+      <div class="step-item">
+        <div class="step-circle inactive" id="sc4">4</div>
+        <span class="step-label">确认提交</span>
+      </div>
+    </div>
+
+    <!-- Step 1: Basic Info -->
+    <div id="supplier-step-1">
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">🏢</span>
+          <h3>企业基本信息</h3>
+        </div>
+        <div class="form-section-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>供应商名称</label>
+              <input class="form-input" value="鲜达农产品有限公司" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-group">
+              <label class="form-label">供应商名称（英文）</label>
+              <input class="form-input" placeholder="请输入英文名称">
+            </div>
+            <div class="form-group">
+              <label class="form-label">供应商简称</label>
+              <input class="form-input" placeholder="请输入简称">
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>供应商地址</label>
+              <input class="form-input" placeholder="请输入详细地址">
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>联系人</label>
+              <input class="form-input" value="张经理">
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>联系方式</label>
+              <div style="display:flex;gap:8px">
+                <select class="form-select" style="width:100px"><option>手机</option><option>座机</option></select>
+                <input class="form-input" style="flex:1" placeholder="请输入联系方式">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>供应商单位类型</label>
+              <select class="form-select">
+                <option value="">请选择</option>
+                <option>有限责任公司</option>
+                <option>股份有限公司</option>
+                <option>个体工商户</option>
+                <option>合伙企业</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>纳税人类型</label>
+              <select class="form-select">
+                <option value="">请选择</option>
+                <option>一般纳税人</option>
+                <option>小规模纳税人</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>唯一码识别号类型</label>
+              <select class="form-select">
+                <option value="">请选择</option>
+                <option>统一社会信用代码</option>
+                <option>组织机构代码</option>
+                <option>营业执照注册号</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>纳税人识别号</label>
+              <input class="form-input" placeholder="请输入统一社会信用代码">
+            </div>
+            <div class="form-group">
+              <label class="form-label">是否农业生产者</label>
+              <div class="form-radio-group">
+                <label><input type="radio" name="farmer" checked> 否</label>
+                <label><input type="radio" name="farmer"> 是</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>定价方式</label>
+              <select class="form-select">
+                <option>含税</option>
+                <option>不含税</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <button class="btn btn-ghost" onclick="showToast('草稿已保存')">保存草稿</button>
+        <button class="btn btn-primary btn-lg" onclick="goSupplierStep(2)">下一步：结算信息 →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Settlement Info -->
+    <div id="supplier-step-2" style="display:none">
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">💰</span>
+          <h3>结算信息</h3>
+        </div>
+        <div class="form-section-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>付款类型</label>
+              <div class="form-radio-group">
+                <label><input type="radio" name="pay" checked> 后付费</label>
+                <label><input type="radio" name="pay"> 预付费</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>结算方式</label>
+              <select class="form-select">
+                <option value="">请选择</option>
+                <option>月结</option>
+                <option>半月结</option>
+                <option>周结</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>结算币种</label>
+              <select class="form-select">
+                <option>SGD 新加坡元</option>
+                <option>CNY 人民币</option>
+                <option>USD 美元</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">财务联系人</label>
+              <input class="form-input" placeholder="请输入财务联系人">
+            </div>
+            <div class="form-group">
+              <label class="form-label">财务联系方式</label>
+              <input class="form-input" placeholder="请输入联系方式">
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>账户名称</label>
+              <input class="form-input" placeholder="请输入开户名">
+            </div>
+            <div class="form-group">
+              <label class="form-label">账户名称（英文）</label>
+              <input class="form-input" placeholder="Account Name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SWIFT 代码</label>
+              <input class="form-input" placeholder="如：OCBCSGSG">
+            </div>
+            <div class="form-group">
+              <label class="form-label">所属国家</label>
+              <select class="form-select">
+                <option>新加坡</option>
+                <option>中国</option>
+                <option>马来西亚</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>银行收款号</label>
+              <input class="form-input" placeholder="请输入银行账号">
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>银行大类</label>
+              <select class="form-select">
+                <option value="">请选择</option>
+                <option>OCBC 华侨银行</option>
+                <option>DBS 星展银行</option>
+                <option>UOB 大华银行</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">银行支行</label>
+              <input class="form-input" placeholder="请输入支行名称">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <button class="btn btn-ghost" onclick="goSupplierStep(1)">← 上一步</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="showToast('草稿已保存')">保存草稿</button>
+          <button class="btn btn-primary btn-lg" onclick="goSupplierStep(3)">下一步：资质附件 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Qualifications -->
+    <div id="supplier-step-3" style="display:none">
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">📋</span>
+          <h3>资质证明</h3>
+        </div>
+        <div class="form-section-body">
+          <p style="font-size:13px;color:#999;margin-bottom:16px">请上传企业资质文件，支持 PDF、JPG、PNG 格式，单个文件不超过 10MB</p>
+          <table class="data-table" style="margin-bottom:16px">
+            <thead>
+              <tr><th>证件类型</th><th>证件名称</th><th>有效期</th><th>文件</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <select class="form-select" style="width:140px">
+                    <option>营业执照</option>
+                    <option>食品经营许可证</option>
+                    <option>卫生许可证</option>
+                    <option>其他</option>
+                  </select>
+                </td>
+                <td><input class="form-input" value="营业执照" style="width:160px"></td>
+                <td><input class="form-input" type="date" style="width:150px"></td>
+                <td><span style="color:#1890ff;font-size:13px">营业执照.pdf ✓</span></td>
+                <td><button class="btn btn-danger btn-sm">删除</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <button class="btn btn-outline btn-sm" onclick="showToast('已添加新行')">+ 添加资质</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">📎</span>
+          <h3>附件资源</h3>
+        </div>
+        <div class="form-section-body">
+          <div class="upload-area">
+            <div class="upload-icon">📤</div>
+            <p>点击或拖拽上传附件</p>
+            <p style="font-size:12px;margin-top:4px">支持 PDF、Word、Excel、图片等格式</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <button class="btn btn-ghost" onclick="goSupplierStep(2)">← 上一步</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="showToast('草稿已保存')">保存草稿</button>
+          <button class="btn btn-primary btn-lg" onclick="goSupplierStep(4)">下一步：确认提交 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Confirm & Submit -->
+    <div id="supplier-step-4" style="display:none">
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">✅</span>
+          <h3>信息确认</h3>
+        </div>
+        <div class="form-section-body">
+          <p style="font-size:14px;color:#333;margin-bottom:16px">请确认以下信息无误后提交：</p>
+          <div style="background:#fafafa;border-radius:8px;padding:20px;margin-bottom:16px">
+            <h4 style="font-size:14px;margin-bottom:12px;color:#333">企业基本信息</h4>
+            <div class="review-info-grid">
+              <div class="review-item"><span class="label">供应商名称</span><span class="value">鲜达农产品有限公司</span></div>
+              <div class="review-item"><span class="label">联系人</span><span class="value">张经理</span></div>
+              <div class="review-item"><span class="label">联系方式</span><span class="value">+65 9123 4567</span></div>
+              <div class="review-item"><span class="label">供应商地址</span><span class="value">新加坡 Jurong East Street 21 #03-05</span></div>
+              <div class="review-item"><span class="label">纳税人类型</span><span class="value">一般纳税人</span></div>
+              <div class="review-item"><span class="label">定价方式</span><span class="value">含税</span></div>
+            </div>
+          </div>
+          <div style="background:#fafafa;border-radius:8px;padding:20px;margin-bottom:16px">
+            <h4 style="font-size:14px;margin-bottom:12px;color:#333">结算信息</h4>
+            <div class="review-info-grid">
+              <div class="review-item"><span class="label">付款类型</span><span class="value">后付费</span></div>
+              <div class="review-item"><span class="label">结算方式</span><span class="value">月结</span></div>
+              <div class="review-item"><span class="label">结算币种</span><span class="value">SGD</span></div>
+              <div class="review-item"><span class="label">银行收款号</span><span class="value">****5678</span></div>
+            </div>
+          </div>
+          <div style="background:#fafafa;border-radius:8px;padding:20px">
+            <h4 style="font-size:14px;margin-bottom:12px;color:#333">资质证明</h4>
+            <p style="font-size:13px;color:#666">营业执照.pdf — 有效期至 2028-12-31</p>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <button class="btn btn-ghost" onclick="goSupplierStep(3)">← 返回修改</button>
+        <button class="btn btn-primary btn-lg" onclick="submitSupplierForm()" style="background:#52c41a">确认提交</button>
+      </div>
+    </div>
+
+    <!-- Success State -->
+    <div id="supplier-success" style="display:none">
+      <div class="success-page fade-in">
+        <div class="success-icon">✅</div>
+        <h2>提交成功！</h2>
+        <p style="margin-bottom:24px">您的信息已成功提交，采购人员将在 1-3 个工作日内完成审核。</p>
+        <div style="background:#fff;border-radius:8px;padding:20px;max-width:400px;margin:0 auto;text-align:left;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+          <p style="font-size:13px;color:#666;margin-bottom:8px">提交信息摘要</p>
+          <p style="font-size:14px"><strong>供应商：</strong>鲜达农产品有限公司</p>
+          <p style="font-size:14px"><strong>提交时间：</strong>2026-04-05 15:30</p>
+          <p style="font-size:14px"><strong>邀请编号：</strong>INV-20260401-001</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 2B: MOBILE PREVIEW ============ -->
+<div class="page procurement-page" id="page-mobile-preview">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">原型预览</div>
+      <h2>手机端表单预览（WhatsApp / 微信打开效果）</h2>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="switchMobileApp('whatsapp')" id="btn-wa" style="border-color:#25D366;color:#25D366">WhatsApp</button>
+      <button class="btn btn-ghost" onclick="switchMobileApp('wechat')" id="btn-wx">微信</button>
+    </div>
+  </div>
+  <div class="content-area fade-in" style="display:flex;gap:32px;justify-content:center;padding-top:24px">
+
+    <!-- Mobile Frame -->
+    <div>
+      <div class="mobile-frame">
+        <div class="mobile-frame-notch"></div>
+        <!-- App Bar -->
+        <div class="mobile-frame-bar" id="mobile-app-bar">
+          <span class="back-arrow">‹</span>
+          <span class="bar-title" id="mobile-bar-title">Foodmax 供应商登记</span>
+          <span class="bar-dots">···</span>
+        </div>
+        <!-- Content -->
+        <div class="mobile-frame-content" id="mobile-content">
+          <div class="mobile-supplier-header">
+            <h2>供应商信息登记</h2>
+            <p>Foodmax 采购供应商注册</p>
+          </div>
+          <div class="mobile-step-bar">
+            <div class="mobile-step-dot active"></div>
+            <div class="mobile-step-dot"></div>
+            <div class="mobile-step-dot"></div>
+            <div class="mobile-step-dot"></div>
+          </div>
+          <div class="mobile-form-body">
+            <div class="m-form-group">
+              <span class="m-label"><span style="color:#ff4d4f">*</span> 供应商名称</span>
+              <input class="m-input" value="鲜达农产品有限公司" readonly style="background:#f5f5f5">
+            </div>
+            <div class="m-form-group">
+              <span class="m-label">供应商名称（英文）</span>
+              <input class="m-input" placeholder="English name">
+            </div>
+            <div class="m-form-group">
+              <span class="m-label"><span style="color:#ff4d4f">*</span> 供应商地址</span>
+              <input class="m-input" placeholder="请输入详细地址">
+            </div>
+            <div class="m-form-group">
+              <span class="m-label"><span style="color:#ff4d4f">*</span> 联系人</span>
+              <input class="m-input" value="张经理">
+            </div>
+            <div class="m-form-group">
+              <span class="m-label"><span style="color:#ff4d4f">*</span> 联系方式</span>
+              <input class="m-input" placeholder="+65" type="tel">
+            </div>
+            <div class="m-form-group">
+              <span class="m-label"><span style="color:#ff4d4f">*</span> 纳税人类型</span>
+              <select class="m-select"><option>请选择</option><option>一般纳税人</option><option>小规模纳税人</option></select>
+            </div>
+            <div class="m-form-group">
+              <span class="m-label"><span style="color:#ff4d4f">*</span> 纳税人识别号</span>
+              <input class="m-input" placeholder="统一社会信用代码">
+            </div>
+            <div class="m-form-group" style="margin-top:20px">
+              <button class="m-btn m-btn-primary">下一步：结算信息</button>
+              <button class="m-btn m-btn-draft">保存草稿</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:12px;color:#999;margin-top:12px" id="mobile-device-label">iPhone 14 · WhatsApp 内置浏览器</p>
+    </div>
+
+    <!-- Design Notes -->
+    <div style="max-width:360px">
+      <div class="form-section">
+        <div class="form-section-header"><span class="icon">📱</span><h3>移动端适配要点</h3></div>
+        <div class="form-section-body" style="font-size:13px;line-height:2;color:#555">
+          <p><strong style="color:#25D366">WhatsApp 适配：</strong></p>
+          <p>· 链接以卡片形式展示（含标题+描述+图标）</p>
+          <p>· 点击直接在 WhatsApp 内置浏览器打开</p>
+          <p>· 表单单列布局，输入框 44px 最小高度</p>
+          <p style="margin-top:8px"><strong style="color:#07C160">微信适配：</strong></p>
+          <p>· 支持微信 JS-SDK 分享接口</p>
+          <p>· 分享时展示自定义标题+描述+缩略图</p>
+          <p>· 微信内置浏览器全兼容，无需跳转</p>
+          <p style="margin-top:8px"><strong>通用移动端设计：</strong></p>
+          <p>· 分步填写，每步字段不超过 8 个</p>
+          <p>· 大号触控区域（最小 44×44px）</p>
+          <p>· 支持中途保存草稿，防止意外丢失</p>
+          <p>· 拍照上传资质（调用手机相机）</p>
+          <p>· 底部固定操作按钮</p>
+          <p>· 输入完自动滚动到下一字段</p>
+        </div>
+      </div>
+      <div class="form-section" style="margin-top:16px">
+        <div class="form-section-header"><span class="icon">🔗</span><h3>链接分享机制</h3></div>
+        <div class="form-section-body" style="font-size:13px;line-height:2;color:#555">
+          <p>· 短链接格式：scm.foodmax.com/s/XXXX</p>
+          <p>· Open Graph 标签实现富媒体卡片预览</p>
+          <p>· 链接一次性有效，绑定供应商邀请记录</p>
+          <p>· 过期后展示友好提示页面</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 3: REVIEW ============ -->
+<div class="page procurement-page" id="page-review">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">供应商管理 / 注册邀请 / 审核</div>
+      <h2>供应商信息审核 <span class="badge badge-pending" style="font-size:12px;vertical-align:middle;margin-left:8px">待审核</span></h2>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="showPage('invite')">返回列表</button>
+      <button class="btn btn-primary" onclick="approveSupplier()">审核通过并建档</button>
+    </div>
+  </div>
+  <div class="content-area fade-in">
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab-item active" onclick="switchReviewTab(this,'review-info')">供应商信息</div>
+      <div class="tab-item" onclick="switchReviewTab(this,'review-internal')">内部补充字段</div>
+      <div class="tab-item" onclick="switchReviewTab(this,'review-log')">操作日志</div>
+    </div>
+
+    <!-- Tab: Info Review -->
+    <div id="review-info">
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">🏢</span>
+          <h3>企业基本信息</h3>
+          <span style="margin-left:auto;font-size:12px;color:#999">供应商填写 · 采购可编辑修改</span>
+        </div>
+        <div class="form-section-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">供应商名称</label>
+              <input class="form-input" value="鲜达农产品有限公司">
+            </div>
+            <div class="form-group">
+              <label class="form-label">供应商名称（英文）</label>
+              <input class="form-input" value="Xianda Agricultural Products Co., Ltd.">
+            </div>
+            <div class="form-group">
+              <label class="form-label">供应商简称</label>
+              <input class="form-input" value="鲜达农产">
+            </div>
+            <div class="form-group">
+              <label class="form-label">供应商地址</label>
+              <input class="form-input" value="新加坡 Jurong East Street 21 #03-05">
+            </div>
+            <div class="form-group">
+              <label class="form-label">联系人</label>
+              <input class="form-input" value="张经理">
+            </div>
+            <div class="form-group">
+              <label class="form-label">联系方式</label>
+              <input class="form-input" value="+65 9123 4567">
+            </div>
+            <div class="form-group">
+              <label class="form-label">供应商单位类型</label>
+              <select class="form-select"><option selected>有限责任公司</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">纳税人类型</label>
+              <select class="form-select"><option selected>一般纳税人</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">纳税人识别号</label>
+              <input class="form-input" value="91310000MA1FL8XXXX">
+            </div>
+            <div class="form-group">
+              <label class="form-label">定价方式</label>
+              <select class="form-select"><option selected>含税</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">💰</span>
+          <h3>结算信息</h3>
+        </div>
+        <div class="form-section-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">付款类型</label>
+              <input class="form-input" value="后付费" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">结算方式</label>
+              <select class="form-select"><option selected>月结</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">结算币种</label>
+              <input class="form-input" value="SGD" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">账户名称</label>
+              <input class="form-input" value="XIANDA AGRICULTURAL PTE LTD">
+            </div>
+            <div class="form-group">
+              <label class="form-label">银行收款号</label>
+              <input class="form-input" value="6012-XXXX-5678">
+            </div>
+            <div class="form-group">
+              <label class="form-label">银行大类</label>
+              <input class="form-input" value="OCBC 华侨银行" disabled>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">📋</span>
+          <h3>资质证明</h3>
+        </div>
+        <div class="form-section-body">
+          <table class="data-table">
+            <thead><tr><th>证件类型</th><th>证件名称</th><th>有效期</th><th>文件</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>营业执照</td>
+                <td>营业执照</td>
+                <td>2028-12-31</td>
+                <td><a href="#" style="color:#1890ff;font-size:13px">营业执照.pdf 查看</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Internal Fields -->
+    <div id="review-internal" style="display:none">
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">⚙️</span>
+          <h3>内部管理字段</h3>
+          <span style="margin-left:auto;font-size:12px;color:#faad14">仅采购填写 · 供应商不可见</span>
+        </div>
+        <div class="form-section-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>供应商属性</label>
+              <select class="form-select">
+                <option>常规供应商</option>
+                <option>战略供应商</option>
+                <option>临时供应商</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>供应商等级</label>
+              <select class="form-select">
+                <option value="">请选择</option>
+                <option>A级</option>
+                <option>B级</option>
+                <option>C级</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>供应商性质</label>
+              <select class="form-select">
+                <option value="">请选择</option>
+                <option>生产商</option>
+                <option>贸易商</option>
+                <option>代理商</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>是否参与结算</label>
+              <select class="form-select">
+                <option>是</option>
+                <option>否</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">合同扣点</label>
+              <input class="form-input" placeholder="请输入合同扣点（%）">
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span>最晚付款日（票到后）</label>
+              <select class="form-select">
+                <option value="">请选择</option>
+                <option>30天</option>
+                <option>45天</option>
+                <option>60天</option>
+                <option>90天</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">合同有效期</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input class="form-input" type="date" style="flex:1">
+                <span>至</span>
+                <input class="form-input" type="date" style="flex:1">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Operation Log -->
+    <div id="review-log" style="display:none">
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="icon">📝</span>
+          <h3>操作日志</h3>
+        </div>
+        <div class="form-section-body">
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot blue">📥</div>
+              <div class="timeline-content">
+                <div class="title">供应商提交注册信息</div>
+                <div class="desc">鲜达农产品有限公司（张经理）通过链接提交 · 2026-04-05 15:30</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot orange">📧</div>
+              <div class="timeline-content">
+                <div class="title">系统发送审核通知</div>
+                <div class="desc">已通知采购人员 沈亮 · 2026-04-05 15:30</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot green">📤</div>
+              <div class="timeline-content">
+                <div class="title">采购发起注册邀请</div>
+                <div class="desc">沈亮 创建邀请并生成链接 · 2026-04-01 14:30</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 4: SUPPLIER LIST ============ -->
+<div class="page procurement-page" id="page-list">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">供应商管理</div>
+      <h2>供应商列表</h2>
+    </div>
+  </div>
+  <div class="content-area fade-in">
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center">
+      <input class="form-input" placeholder="搜索供应商..." style="width:240px">
+      <select class="form-select"><option>全部状态</option><option>草稿</option><option>正式</option></select>
+      <select class="form-select"><option>全部等级</option><option>A级</option><option>B级</option><option>C级</option></select>
+      <button class="btn btn-ghost btn-sm">搜索</button>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>供应商ID</th>
+          <th>供应商名称</th>
+          <th>供应商属性</th>
+          <th>等级</th>
+          <th>联系人</th>
+          <th>结算币种</th>
+          <th>注册来源</th>
+          <th>状态</th>
+          <th>创建时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:#f6ffed">
+          <td><strong>SUP-20260405-001</strong></td>
+          <td>鲜达农产品有限公司</td>
+          <td>常规供应商</td>
+          <td>B级</td>
+          <td>张经理</td>
+          <td>SGD</td>
+          <td><span class="badge" style="background:#e6f7ff;color:#1890ff">线上注册</span></td>
+          <td><span class="badge badge-approved">正式</span></td>
+          <td>2026-04-05</td>
+        </tr>
+        <tr>
+          <td>SUP-20260330-008</td>
+          <td>汇丰水产贸易公司</td>
+          <td>战略供应商</td>
+          <td>A级</td>
+          <td>王经理</td>
+          <td>SGD</td>
+          <td><span class="badge" style="background:#e6f7ff;color:#1890ff">线上注册</span></td>
+          <td><span class="badge badge-approved">正式</span></td>
+          <td>2026-03-30</td>
+        </tr>
+        <tr>
+          <td>SUP-20260315-012</td>
+          <td>优选食材供应链</td>
+          <td>常规供应商</td>
+          <td>B级</td>
+          <td>赵经理</td>
+          <td>SGD</td>
+          <td><span class="badge" style="background:#f0f0f0;color:#666">手工录入</span></td>
+          <td><span class="badge badge-approved">正式</span></td>
+          <td>2026-03-15</td>
+        </tr>
+        <tr>
+          <td>SUP-20260301-003</td>
+          <td>嘉禾粮油有限公司</td>
+          <td>常规供应商</td>
+          <td>A级</td>
+          <td>刘总</td>
+          <td>CNY</td>
+          <td><span class="badge" style="background:#f0f0f0;color:#666">手工录入</span></td>
+          <td><span class="badge badge-approved">正式</span></td>
+          <td>2026-03-01</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+      <span style="font-size:13px;color:#999">共 4 条记录</span>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" disabled>上一页</button>
+        <button class="btn btn-primary btn-sm">1</button>
+        <button class="btn btn-ghost btn-sm" disabled>下一页</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal-overlay" id="approve-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>确认审核通过</h3>
+      <button class="modal-close" onclick="hideModal('approve-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:#333;margin-bottom:16px">确认将以下供应商信息审核通过并创建供应商档案？</p>
+      <div style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;padding:16px">
+        <p style="font-size:14px"><strong>供应商：</strong>鲜达农产品有限公司</p>
+        <p style="font-size:14px;margin-top:4px"><strong>联系人：</strong>张经理</p>
+        <p style="font-size:13px;color:#52c41a;margin-top:8px">✓ 审核通过后系统将自动生成供应商 ID 并创建档案</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('approve-modal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmApprove()" style="background:#52c41a">确认通过并建档</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Page switching
+  function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + pageId).classList.add('active');
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    const idx = {flow:0,invite:1,'supplier-form':2,'mobile-preview':3,review:4,list:5}[pageId];
+    document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  // Modal
+  function showModal(id) { document.getElementById(id).classList.add('show'); }
+  function hideModal(id) { document.getElementById(id).classList.remove('show'); }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Create invite
+  function createInvite() {
+    hideModal('invite-modal');
+    setTimeout(() => showModal('link-modal'), 300);
+  }
+
+  // Supplier form steps
+  let currentStep = 1;
+  function goSupplierStep(step) {
+    document.getElementById('supplier-step-' + currentStep).style.display = 'none';
+    document.getElementById('supplier-step-' + step).style.display = 'block';
+    // Update indicators
+    for(let i=1;i<=4;i++) {
+      const sc = document.getElementById('sc'+i);
+      const sl = document.getElementById('sl'+(i-1));
+      if(i < step) { sc.className='step-circle done'; sc.textContent='✓'; if(sl) sl.className='step-line done'; }
+      else if(i === step) { sc.className='step-circle active'; sc.textContent=i; }
+      else { sc.className='step-circle inactive'; sc.textContent=i; if(sl) sl.className='step-line'; }
+    }
+    currentStep = step;
+    window.scrollTo(0,0);
+  }
+
+  function submitSupplierForm() {
+    document.getElementById('supplier-step-4').style.display = 'none';
+    document.querySelector('.step-indicator').style.display = 'none';
+    document.getElementById('supplier-success').style.display = 'block';
+    window.scrollTo(0,0);
+  }
+
+  // Review tabs
+  function switchReviewTab(el, tabId) {
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    ['review-info','review-internal','review-log'].forEach(id => {
+      document.getElementById(id).style.display = id===tabId ? 'block' : 'none';
+    });
+  }
+
+  // Mobile app switch
+  function switchMobileApp(app) {
+    const bar = document.getElementById('mobile-app-bar');
+    const label = document.getElementById('mobile-device-label');
+    const btnWa = document.getElementById('btn-wa');
+    const btnWx = document.getElementById('btn-wx');
+    if(app === 'whatsapp') {
+      bar.style.background = '#075E54';
+      bar.querySelector('.back-arrow').style.color = '#fff';
+      bar.querySelector('.bar-title').style.color = '#fff';
+      bar.querySelector('.bar-dots').style.color = '#fff';
+      label.textContent = 'iPhone 14 · WhatsApp 内置浏览器';
+      btnWa.style.borderColor = '#25D366'; btnWa.style.color = '#25D366';
+      btnWx.style.borderColor = '#d9d9d9'; btnWx.style.color = '#666';
+    } else {
+      bar.style.background = '#EDEDED';
+      bar.querySelector('.back-arrow').style.color = '#333';
+      bar.querySelector('.bar-title').style.color = '#333';
+      bar.querySelector('.bar-dots').style.color = '#333';
+      label.textContent = 'iPhone 14 · 微信内置浏览器';
+      btnWx.style.borderColor = '#07C160'; btnWx.style.color = '#07C160';
+      btnWa.style.borderColor = '#d9d9d9'; btnWa.style.color = '#666';
+    }
+  }
+
+  // Approve
+  function approveSupplier() { showModal('approve-modal'); }
+  function confirmApprove() {
+    hideModal('approve-modal');
+    showToast('审核通过！供应商档案已自动创建 (SUP-20260405-001)');
+    setTimeout(() => showPage('list'), 1500);
+  }
+</script>
+</body>
+</html>

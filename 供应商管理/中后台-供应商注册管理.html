@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中后台 · 供应商注册管理</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background:#f5f7fa; color:#333; }
+
+  /* === Left Sidebar === */
+  .sidebar { position:fixed; top:0; left:0; bottom:0; width:200px; background:#001529; color:#fff; z-index:100; display:flex; flex-direction:column; }
+  .sidebar-logo { padding:16px 20px; font-size:16px; font-weight:700; color:#4ecdc4; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; gap:8px; height:56px; }
+  .sidebar-menu { flex:1; overflow-y:auto; padding:8px 0; }
+  .menu-group { padding:8px 0; }
+  .menu-group-title { padding:8px 20px; font-size:11px; color:rgba(255,255,255,.35); text-transform:uppercase; letter-spacing:1px; }
+  .menu-item { display:flex; align-items:center; gap:8px; padding:10px 20px; font-size:13px; color:rgba(255,255,255,.65); cursor:pointer; transition:all .2s; }
+  .menu-item:hover { color:#fff; background:rgba(255,255,255,.06); }
+  .menu-item.active { color:#fff; background:#4ecdc4; border-radius:0 20px 20px 0; margin-right:12px; }
+  .menu-item .icon { font-size:15px; width:20px; text-align:center; }
+
+  /* === Top Bar === */
+  .topbar { position:fixed; top:0; left:200px; right:0; height:56px; background:#fff; border-bottom:1px solid #e8e8e8; display:flex; align-items:center; justify-content:space-between; padding:0 24px; z-index:99; }
+  .topbar-left { display:flex; align-items:center; gap:16px; }
+  .topbar-tabs { display:flex; gap:2px; }
+  .topbar-tab { padding:6px 14px; font-size:12px; background:#f0f0f0; border-radius:6px 6px 0 0; cursor:pointer; color:#666; border:none; transition:all .15s; position:relative; }
+  .topbar-tab.active { background:#fff; color:#333; font-weight:500; box-shadow:0 -1px 4px rgba(0,0,0,.04); }
+  .topbar-tab .tab-close { margin-left:6px; font-size:10px; color:#999; }
+  .topbar-right { display:flex; align-items:center; gap:16px; font-size:13px; color:#666; }
+  .topbar-right .user-info { display:flex; align-items:center; gap:6px; }
+  .topbar-right .avatar { width:28px; height:28px; border-radius:50%; background:#4ecdc4; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; }
+
+  /* === Main Content === */
+  .main { margin-left:200px; padding-top:56px; min-height:100vh; }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  .page-header { background:#fff; border-bottom:1px solid #f0f0f0; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .page-header h2 { font-size:17px; font-weight:600; }
+  .breadcrumb { font-size:12px; color:#999; margin-bottom:2px; }
+  .content-area { padding:20px 24px; }
+
+  /* Table */
+  .data-table { width:100%; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .data-table th { background:#fafafa; padding:11px 14px; text-align:left; font-size:12px; font-weight:600; color:#666; border-bottom:1px solid #e8e8e8; white-space:nowrap; }
+  .data-table td { padding:11px 14px; font-size:13px; border-bottom:1px solid #f0f0f0; }
+  .data-table tr:hover td { background:#fafcff; }
+
+  /* Badges */
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:500; }
+  .badge-pending { background:#fff7e6; color:#d48806; }
+  .badge-approved { background:#f6ffed; color:#389e0d; }
+  .badge-draft { background:#f0f0f0; color:#888; }
+  .badge-expired { background:#fff1f0; color:#cf1322; }
+  .badge-reviewing { background:#e6f7ff; color:#096dd9; }
+  .badge-finance { background:#f9f0ff; color:#531dab; }
+  .badge-rejected { background:#fff2e8; color:#d4380d; }
+  .notif-dot { width:7px; height:7px; background:#ff4d4f; border-radius:50%; display:inline-block; margin-left:4px; vertical-align:top; }
+
+  /* Approval Step Tracker */
+  .approval-steps { display:flex; align-items:flex-start; gap:0; margin:20px 0; }
+  .approval-step { display:flex; flex-direction:column; align-items:center; flex:1; position:relative; }
+  .approval-step:not(:last-child)::after { content:''; position:absolute; top:18px; left:50%; width:100%; height:2px; background:#e8e8e8; z-index:0; }
+  .approval-step.done:not(:last-child)::after { background:#52c41a; }
+  .approval-step.active:not(:last-child)::after { background:#e8e8e8; }
+  .step-circle { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; z-index:1; position:relative; background:#e8e8e8; color:#999; }
+  .approval-step.done .step-circle { background:#52c41a; color:#fff; }
+  .approval-step.active .step-circle { background:#1677ff; color:#fff; box-shadow:0 0 0 3px rgba(22,119,255,.2); }
+  .step-label { margin-top:7px; font-size:11px; color:#666; text-align:center; line-height:1.4; }
+  .approval-step.done .step-label { color:#52c41a; font-weight:500; }
+  .approval-step.active .step-label { color:#1677ff; font-weight:500; }
+  .step-sub { font-size:10px; color:#999; margin-top:2px; text-align:center; }
+
+  /* Config page */
+  .config-table th { background:#fafafa; padding:10px 14px; text-align:left; font-size:12px; font-weight:600; color:#666; border-bottom:1px solid #e8e8e8; }
+  .config-table td { padding:10px 14px; font-size:13px; border-bottom:1px solid #f5f5f5; }
+  .config-table tr:hover td { background:#fafcff; }
+  .switch { position:relative; display:inline-block; width:36px; height:20px; }
+  .switch input { display:none; }
+  .slider { position:absolute; inset:0; background:#ccc; border-radius:20px; cursor:pointer; transition:.3s; }
+  .slider:before { content:''; position:absolute; width:14px; height:14px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.3s; }
+  input:checked + .slider { background:#4ecdc4; }
+  input:checked + .slider:before { transform:translateX(16px); }
+
+  /* Reject callout */
+  .reject-callout { background:#fff2e8; border:1px solid #ffbb96; border-radius:8px; padding:12px 16px; margin-bottom:14px; }
+  .reject-callout .reject-title { font-size:13px; font-weight:600; color:#d4380d; margin-bottom:4px; }
+  .reject-callout .reject-reason { font-size:12px; color:#555; }
+
+  /* Buttons */
+  .btn { padding:7px 16px; border-radius:6px; border:none; cursor:pointer; font-size:12px; font-weight:500; transition:all .15s; display:inline-flex; align-items:center; gap:5px; }
+  .btn-primary { background:#4ecdc4; color:#fff; }
+  .btn-primary:hover { background:#3db8b0; }
+  .btn-outline { background:#fff; color:#4ecdc4; border:1px solid #4ecdc4; }
+  .btn-outline:hover { background:#f0fffe; }
+  .btn-ghost { background:transparent; color:#666; border:1px solid #d9d9d9; }
+  .btn-ghost:hover { color:#4ecdc4; border-color:#4ecdc4; }
+  .btn-sm { padding:4px 10px; font-size:11px; }
+  .btn-danger { background:#fff; color:#cf1322; border:1px solid #ffccc7; }
+
+  /* Modal */
+  .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.4); z-index:2000; display:none; align-items:center; justify-content:center; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:#fff; border-radius:12px; width:560px; max-height:85vh; overflow:auto; box-shadow:0 12px 48px rgba(0,0,0,.15); }
+  .modal-header { padding:18px 24px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; }
+  .modal-header h3 { font-size:15px; font-weight:600; }
+  .modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:#999; line-height:1; }
+  .modal-body { padding:20px 24px; }
+  .modal-footer { padding:14px 24px; border-top:1px solid #f0f0f0; display:flex; justify-content:flex-end; gap:8px; }
+
+  /* Form */
+  .form-section { background:#fff; border-radius:8px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .form-section-header { padding:14px 20px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px; }
+  .form-section-header h3 { font-size:14px; font-weight:600; }
+  .form-section-header .icon { font-size:16px; }
+  .form-section-body { padding:20px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; }
+  .form-group { display:flex; flex-direction:column; }
+  .form-group.full-width { grid-column:1/-1; }
+  .form-label { font-size:12px; color:#666; margin-bottom:5px; }
+  .form-label .req { color:#ff4d4f; margin-right:2px; }
+  .form-input { padding:7px 11px; border:1px solid #d9d9d9; border-radius:6px; font-size:13px; transition:border-color .2s; }
+  .form-input:focus { outline:none; border-color:#4ecdc4; box-shadow:0 0 0 2px rgba(78,205,196,.12); }
+  .form-input:disabled { background:#f5f5f5; color:#999; }
+  .form-select { padding:7px 11px; border:1px solid #d9d9d9; border-radius:6px; font-size:13px; background:#fff; }
+  .form-textarea { padding:7px 11px; border:1px solid #d9d9d9; border-radius:6px; font-size:13px; resize:vertical; min-height:60px; }
+
+  /* Link box */
+  .link-box { background:#f6ffed; border:1px solid #b7eb8f; border-radius:8px; padding:14px; }
+  .link-url { background:#fff; border:1px solid #d9d9d9; border-radius:6px; padding:9px 12px; font-size:13px; color:#1890ff; word-break:break-all; margin-top:6px; }
+
+  /* Share preview */
+  .share-preview { background:#fff; border-radius:10px; border:1px solid #e8e8e8; overflow:hidden; margin-top:14px; }
+  .share-preview-header { padding:10px 14px; background:#fafafa; border-bottom:1px solid #f0f0f0; font-size:11px; color:#999; }
+  .share-preview-body { padding:14px; display:flex; gap:10px; }
+  .share-preview-body .preview-icon { width:42px; height:42px; background:linear-gradient(135deg,#2d6a4f,#40916c); border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px; font-weight:700; flex-shrink:0; }
+  .share-preview-body .preview-text h4 { font-size:13px; margin-bottom:3px; }
+  .share-preview-body .preview-text p { font-size:11px; color:#999; line-height:1.4; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:0; border-bottom:2px solid #f0f0f0; margin-bottom:16px; }
+  .tab-item { padding:10px 20px; cursor:pointer; font-size:13px; color:#666; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .15s; }
+  .tab-item.active { color:#4ecdc4; border-bottom-color:#4ecdc4; font-weight:500; }
+
+  /* Timeline */
+  .timeline { padding:12px 0; }
+  .timeline-item { display:flex; gap:10px; padding-bottom:18px; position:relative; }
+  .timeline-item:not(:last-child)::after { content:''; position:absolute; left:13px; top:30px; bottom:0; width:1px; background:#e8e8e8; }
+  .timeline-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+  .timeline-dot.green { background:#f6ffed; color:#52c41a; }
+  .timeline-dot.blue { background:#e6f7ff; color:#1890ff; }
+  .timeline-dot.orange { background:#fff7e6; color:#fa8c16; }
+  .timeline-content .title { font-size:13px; font-weight:500; }
+  .timeline-content .desc { font-size:11px; color:#999; margin-top:2px; }
+
+  /* Toast */
+  .toast { position:fixed; top:72px; left:50%; transform:translateX(-50%); background:#52c41a; color:#fff; padding:10px 22px; border-radius:8px; font-size:13px; z-index:3000; display:none; box-shadow:0 4px 16px rgba(0,0,0,.15); }
+  .toast.show { display:block; animation:slideD .3s ease; }
+  @keyframes slideD { from{opacity:0;transform:translateX(-50%) translateY(-8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+  .fade-in { animation:fadeIn .35s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">Foodmax SCM</div>
+  <nav class="sidebar-menu">
+    <div class="menu-group">
+      <div class="menu-group-title">采购管理</div>
+      <div class="menu-item"><span class="icon">📦</span>采购单列表</div>
+      <div class="menu-item"><span class="icon">📝</span>新建采购单</div>
+      <div class="menu-item"><span class="icon">📊</span>采购分析</div>
+    </div>
+    <div class="menu-group">
+      <div class="menu-group-title">供应商管理</div>
+      <div class="menu-item active" onclick="showPage('invite')"><span class="icon">📨</span>注册邀请</div>
+      <div class="menu-item" onclick="showPage('list')"><span class="icon">🏢</span>供应商列表</div>
+      <div class="menu-item" onclick="showPage('config')"><span class="icon">⚙️</span>字段配置</div>
+      <div class="menu-item"><span class="icon">📄</span>合同管理</div>
+    </div>
+  </nav>
+</aside>
+
+<!-- ===== TOP BAR ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-tabs">
+      <button class="topbar-tab active" onclick="showPage('invite')">注册邀请管理 <span class="tab-close">×</span></button>
+      <button class="topbar-tab" onclick="showPage('review')">审核详情 <span class="tab-close">×</span></button>
+      <button class="topbar-tab" onclick="showPage('approval')">审批详情 <span class="tab-close">×</span></button>
+      <button class="topbar-tab" onclick="showPage('list')">供应商列表 <span class="tab-close">×</span></button>
+      <button class="topbar-tab" onclick="showPage('config')">字段配置 <span class="tab-close">×</span></button>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span>小满新加坡(SG Xiaoman)</span>
+    <span>SGD</span>
+    <div class="user-info">
+      <div class="avatar">沈</div>
+      <span>沈亮</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <!-- PAGE: Invite List -->
+  <div class="page active" id="page-invite">
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">供应商管理 / 注册邀请</div>
+        <h2>供应商注册邀请管理</h2>
+      </div>
+      <button class="btn btn-primary" onclick="showModal('invite-modal')">+ 新建邀请</button>
+    </div>
+    <div class="content-area fade-in">
+      <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center">
+        <input class="form-input" placeholder="搜索供应商名称..." style="width:220px">
+        <select class="form-select"><option>全部状态</option><option>待填写</option><option>已提交待审核</option><option>待采购负责人审批</option><option>待财务审批</option><option>审批退回</option><option>已通过</option><option>已过期</option></select>
+        <button class="btn btn-ghost btn-sm">搜索</button>
+        <span style="margin-left:auto;font-size:12px;color:#999">共 5 条邀请</span>
+      </div>
+      <table class="data-table">
+        <thead><tr>
+          <th>邀请编号</th><th>供应商名称</th><th>联系人</th><th>发起人</th><th>发起时间</th><th>有效期</th><th>状态</th><th>操作</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>INV-20260404-010</td><td>优鲜供应链科技公司</td><td>刘总</td><td>沈亮</td>
+            <td>2026-04-04 09:15</td><td>2026-04-11</td>
+            <td><span class="badge badge-reviewing">待采购负责人审批</span><span class="notif-dot"></span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="showPage('approval')">去审批</button></td>
+          </tr>
+          <tr>
+            <td>INV-20260401-001</td><td>鲜达农产品有限公司</td><td>张经理</td><td>沈亮</td>
+            <td>2026-04-01 14:30</td><td>2026-04-08</td>
+            <td><span class="badge badge-pending">已提交待审核</span><span class="notif-dot"></span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="showPage('review')">去审核</button></td>
+          </tr>
+          <tr>
+            <td>INV-20260401-002</td><td>绿源食品科技公司</td><td>李总</td><td>沈亮</td>
+            <td>2026-04-01 10:15</td><td>2026-04-08</td>
+            <td><span class="badge badge-draft">待填写</span></td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="showToast('链接已复制到剪贴板')">复制链接</button>
+              <button class="btn btn-ghost btn-sm" onclick="showModal('qr-quick-modal')">二维码</button>
+            </td>
+          </tr>
+          <tr>
+            <td>INV-20260330-005</td><td>汇丰水产贸易公司</td><td>王经理</td><td>陈晓</td>
+            <td>2026-03-30 09:20</td><td>2026-04-06</td>
+            <td><span class="badge badge-approved">已通过</span></td>
+            <td><button class="btn btn-ghost btn-sm">查看详情</button></td>
+          </tr>
+          <tr>
+            <td>INV-20260315-009</td><td>天宏冷链物流</td><td>周经理</td><td>沈亮</td>
+            <td>2026-03-15 16:00</td><td>2026-03-22</td>
+            <td><span class="badge badge-expired">已过期</span></td>
+            <td><span style="font-size:12px;color:#bbb">—</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAGE: Review -->
+  <div class="page" id="page-review">
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">供应商管理 / 注册邀请 / 审核</div>
+        <h2>供应商信息审核 <span class="badge badge-pending" style="font-size:11px;vertical-align:middle;margin-left:6px">待审核</span></h2>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="showPage('invite')">返回列表</button>
+        <button class="btn btn-danger" onclick="showModal('reject-modal')">退回修改</button>
+        <button class="btn btn-primary" onclick="approveSupplier()">提交审批</button>
+      </div>
+    </div>
+    <div class="content-area fade-in">
+      <div class="tabs">
+        <div class="tab-item active" onclick="switchTab(this,'tab-info')">供应商信息</div>
+        <div class="tab-item" onclick="switchTab(this,'tab-internal')">内部补充字段</div>
+        <div class="tab-item" onclick="switchTab(this,'tab-flow')">审批流程</div>
+        <div class="tab-item" onclick="switchTab(this,'tab-log')">操作日志</div>
+      </div>
+
+      <!-- Tab: Info -->
+      <div id="tab-info">
+        <div class="form-section">
+          <div class="form-section-header">
+            <span class="icon">🏢</span><h3>企业基本信息</h3>
+            <span style="margin-left:auto;font-size:11px;color:#999">供应商填写 · 采购可直接编辑修改</span>
+          </div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">供应商名称</label><input class="form-input" value="鲜达农产品有限公司"></div>
+              <div class="form-group"><label class="form-label">供应商名称（英文）</label><input class="form-input" value="Xianda Agricultural Products Co., Ltd."></div>
+              <div class="form-group"><label class="form-label">供应商简称</label><input class="form-input" value="鲜达农产"></div>
+              <div class="form-group"><label class="form-label">供应商地址</label><input class="form-input" value="新加坡 Jurong East Street 21 #03-05"></div>
+              <div class="form-group"><label class="form-label">联系人</label><input class="form-input" value="张经理"></div>
+              <div class="form-group"><label class="form-label">联系方式</label><input class="form-input" value="+65 9123 4567"></div>
+              <div class="form-group"><label class="form-label">供应商单位类型</label><select class="form-select"><option selected>有限责任公司</option></select></div>
+              <div class="form-group"><label class="form-label">纳税人类型</label><select class="form-select"><option selected>一般纳税人</option></select></div>
+              <div class="form-group"><label class="form-label">纳税人识别号</label><input class="form-input" value="91310000MA1FL8XXXX"></div>
+              <div class="form-group"><label class="form-label">定价方式</label><select class="form-select"><option selected>含税</option></select></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-header"><span class="icon">💰</span><h3>结算信息</h3></div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">付款类型</label><input class="form-input" value="后付费" disabled></div>
+              <div class="form-group"><label class="form-label">结算方式</label><select class="form-select"><option selected>月结</option></select></div>
+              <div class="form-group"><label class="form-label">结算币种</label><input class="form-input" value="SGD" disabled></div>
+              <div class="form-group"><label class="form-label">财务联系人</label><input class="form-input" value="张会计"></div>
+              <div class="form-group"><label class="form-label">账户名称</label><input class="form-input" value="XIANDA AGRICULTURAL PTE LTD"></div>
+              <div class="form-group"><label class="form-label">银行收款号</label><input class="form-input" value="6012-XXXX-5678"></div>
+              <div class="form-group"><label class="form-label">银行大类</label><select class="form-select"><option selected>OCBC 华侨银行</option></select></div>
+              <div class="form-group"><label class="form-label">SWIFT 代码</label><input class="form-input" value="OCBCSGSG"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-header"><span class="icon">📋</span><h3>资质证明</h3></div>
+          <div class="form-section-body">
+            <table class="data-table"><thead><tr><th>证件类型</th><th>证件名称</th><th>有效期</th><th>文件</th></tr></thead>
+            <tbody><tr><td>营业执照</td><td>营业执照</td><td>2028-12-31</td><td><a href="#" style="color:#1890ff;font-size:12px">营业执照.pdf 查看</a></td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Internal -->
+      <div id="tab-internal" style="display:none">
+        <div class="form-section">
+          <div class="form-section-header">
+            <span class="icon">⚙️</span><h3>内部管理字段</h3>
+            <span style="margin-left:auto;font-size:11px;color:#faad14">仅采购填写 · 供应商不可见</span>
+          </div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label"><span class="req">*</span>供应商属性</label><select class="form-select"><option>常规供应商</option><option>战略供应商</option></select></div>
+              <div class="form-group"><label class="form-label"><span class="req">*</span>供应商等级</label><select class="form-select"><option value="">请选择</option><option>A级</option><option>B级</option><option>C级</option></select></div>
+              <div class="form-group"><label class="form-label"><span class="req">*</span>供应商性质</label><select class="form-select"><option value="">请选择</option><option>生产商</option><option>贸易商</option><option>代理商</option></select></div>
+              <div class="form-group"><label class="form-label"><span class="req">*</span>是否参与结算</label><select class="form-select"><option>是</option><option>否</option></select></div>
+              <div class="form-group"><label class="form-label">合同扣点</label><input class="form-input" placeholder="请输入（%）"></div>
+              <div class="form-group"><label class="form-label"><span class="req">*</span>最晚付款日（票到后）</label><select class="form-select"><option value="">请选择</option><option>30天</option><option>45天</option><option>60天</option></select></div>
+              <div class="form-group full-width"><label class="form-label">合同有效期</label>
+                <div style="display:flex;gap:8px;align-items:center"><input class="form-input" type="date" style="flex:1"><span>至</span><input class="form-input" type="date" style="flex:1"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Approval Flow -->
+      <div id="tab-flow" style="display:none">
+        <div class="form-section">
+          <div class="form-section-header"><span class="icon">✅</span><h3>审批流程</h3>
+            <span style="margin-left:auto;font-size:11px;color:#999">采购员提交后依次由采购负责人、财务负责人审批</span>
+          </div>
+          <div class="form-section-body">
+            <div class="approval-steps">
+              <div class="approval-step done">
+                <div class="step-circle">✓</div>
+                <div class="step-label">采购员提交</div>
+                <div class="step-sub">沈亮 · 2026-04-05 15:30</div>
+              </div>
+              <div class="approval-step active">
+                <div class="step-circle">2</div>
+                <div class="step-label">采购负责人审批</div>
+                <div class="step-sub">等待审批中…</div>
+              </div>
+              <div class="approval-step">
+                <div class="step-circle">3</div>
+                <div class="step-label">财务负责人审批</div>
+                <div class="step-sub">待前置通过后开放</div>
+              </div>
+              <div class="approval-step">
+                <div class="step-circle">4</div>
+                <div class="step-label">自动建档</div>
+                <div class="step-sub">审批通过后执行</div>
+              </div>
+            </div>
+            <div style="background:#e6f7ff;border:1px solid #91d5ff;border-radius:8px;padding:12px 16px;font-size:12px;color:#555;margin-top:8px">
+              <strong style="color:#096dd9">当前状态：</strong>等待采购负责人审批。采购信息已由采购员（沈亮）提交，系统已通知采购负责人。
+            </div>
+            <div style="margin-top:16px">
+              <div style="font-size:12px;font-weight:600;color:#333;margin-bottom:10px">审批规则说明</div>
+              <ul style="font-size:12px;color:#666;line-height:2;padding-left:16px">
+                <li>采购负责人审批通过后，财务负责人才可进行审批</li>
+                <li>任一节点退回，均需采购员重新修改并提交，流程从第2步重新开始</li>
+                <li>两级审批均通过后，系统自动创建供应商档案并分配编号</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Log -->
+      <div id="tab-log" style="display:none">
+        <div class="form-section">
+          <div class="form-section-header"><span class="icon">📝</span><h3>操作日志</h3></div>
+          <div class="form-section-body">
+            <div class="timeline">
+              <div class="timeline-item"><div class="timeline-dot blue">📥</div><div class="timeline-content"><div class="title">供应商提交注册信息</div><div class="desc">鲜达农产品有限公司（张经理）通过链接提交 · 2026-04-05 15:30</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot orange">📧</div><div class="timeline-content"><div class="title">系统发送审核通知</div><div class="desc">已通知采购人员 沈亮 · 2026-04-05 15:30</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot green">📤</div><div class="timeline-content"><div class="title">采购发起注册邀请</div><div class="desc">沈亮 创建邀请并生成链接 · 2026-04-01 14:30</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: Supplier List -->
+  <div class="page" id="page-list">
+    <div class="page-header">
+      <div><div class="breadcrumb">供应商管理</div><h2>供应商列表</h2></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="showModal('invite-modal')">新建</button>
+        <button class="btn btn-outline">批量配置</button>
+        <button class="btn btn-ghost">导出</button>
+      </div>
+    </div>
+    <div class="content-area fade-in">
+      <!-- Filter bar matching real system -->
+      <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666">
+          <span>供应商编号（旧）：</span><input class="form-input" placeholder="请输入" style="width:130px">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666">
+          <span>供应商编号（新）：</span><input class="form-input" placeholder="请输入" style="width:130px">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666">
+          <span>供应商名称：</span><input class="form-input" placeholder="请输入" style="width:140px">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666">
+          <span>供应商状态：</span><select class="form-select" style="width:100px"><option>全部</option><option>合作</option><option>停用</option></select>
+        </div>
+        <button class="btn btn-primary btn-sm">查询</button>
+        <button class="btn btn-ghost btn-sm">重置</button>
+      </div>
+      <table class="data-table">
+        <thead><tr>
+          <th>供应商编号（旧）</th>
+          <th>供应商编号（新）</th>
+          <th>供应商名称</th>
+          <th>联系电话</th>
+          <th>供应商状态</th>
+          <th>定价方式</th>
+          <th>创建人</th>
+          <th>更新人</th>
+          <th>更新时间</th>
+          <th>操作</th>
+        </tr></thead>
+        <tbody>
+          <tr style="background:#f6ffed">
+            <td>S2026040500001</td>
+            <td><strong>10289</strong></td>
+            <td>鲜达农产品有限公司</td>
+            <td>+65 91234567</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>沈亮</td>
+            <td>沈亮</td>
+            <td>2026-04-05 15:35:00</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2025121800001</td>
+            <td>10273</td>
+            <td>沙特测试专用供应商</td>
+            <td>+86 13862123425</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张芬</td>
+            <td>张芬</td>
+            <td>2026-03-13 10:09:09</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2026010600004</td>
+            <td>10283</td>
+            <td>沙特供应商币种验证-人民币</td>
+            <td>+86 13862123425</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张芬</td>
+            <td>张芬</td>
+            <td>2026-03-13 10:07:05</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2026010600003</td>
+            <td>10282</td>
+            <td>沙特供应商币种验证-里亚尔</td>
+            <td>+86 13862123425</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张芬</td>
+            <td>张芬</td>
+            <td>2026-03-13 10:07:05</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2025121900001</td>
+            <td>10277</td>
+            <td>沙特回归供应商</td>
+            <td>+86 13862123425</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张芬</td>
+            <td>张芬</td>
+            <td>2026-03-13 10:07:05</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2025120200003</td>
+            <td>10250</td>
+            <td>上海心源食品加工有限公司</td>
+            <td>+86 13862123425</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张芬</td>
+            <td>张露月</td>
+            <td>2026-03-13 10:07:05</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2025022500001</td>
+            <td>10038</td>
+            <td>自动化供应商16464188466</td>
+            <td>+86 13164641884</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张露月</td>
+            <td>张露月</td>
+            <td>2026-03-13 10:00:05</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2025022800001</td>
+            <td>10045</td>
+            <td>自动化供应商2172968419</td>
+            <td>+86 13217296841</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张露月</td>
+            <td>张露月</td>
+            <td>2026-03-13 10:00:05</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2025022700005</td>
+            <td>10044</td>
+            <td>自动化供应商72793833713</td>
+            <td>+86 13727938337</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张露月</td>
+            <td>张露月</td>
+            <td>2026-03-13 10:00:05</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+          <tr>
+            <td>S2025022700002</td>
+            <td>10041</td>
+            <td>自动化供应商28496767084</td>
+            <td>+86 13284967670</td>
+            <td>合作</td>
+            <td>含税</td>
+            <td>张露月</td>
+            <td>张露月</td>
+            <td>2026-03-13 10:00:05</td>
+            <td>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">编辑</a>
+              <a href="#" style="color:#389e0d;font-size:12px;margin-right:6px">查看合同</a>
+              <a href="#" style="color:#389e0d;font-size:12px">可供仓库</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Pagination -->
+      <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:14px;gap:12px;font-size:12px;color:#666">
+        <span>共 18 条</span>
+        <span>10条/页</span>
+        <div style="display:flex;gap:2px">
+          <button class="btn btn-ghost btn-sm" disabled>&lt;</button>
+          <button class="btn btn-primary btn-sm" style="min-width:28px;justify-content:center">1</button>
+          <button class="btn btn-ghost btn-sm" style="min-width:28px;justify-content:center">2</button>
+          <button class="btn btn-ghost btn-sm">&gt;</button>
+        </div>
+        <span>前往 <input class="form-input" style="width:40px;padding:3px 6px;text-align:center" value="1"> 页</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- PAGE: Approval (采购负责人 view) -->
+  <div class="page" id="page-approval">
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">供应商管理 / 注册邀请 / 审批</div>
+        <h2>供应商审批 <span class="badge badge-reviewing" style="font-size:11px;vertical-align:middle;margin-left:6px">待采购负责人审批</span></h2>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="showPage('invite')">返回列表</button>
+        <button class="btn btn-danger" onclick="showModal('approval-reject-modal')">审批退回</button>
+        <button class="btn btn-primary" onclick="showModal('approval-pass-modal')" style="background:#52c41a">审批通过</button>
+      </div>
+    </div>
+    <div class="content-area fade-in">
+      <!-- Approval progress banner -->
+      <div style="background:#fff;border-radius:8px;padding:18px 24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+        <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:14px">审批进度</div>
+        <div class="approval-steps">
+          <div class="approval-step done">
+            <div class="step-circle">✓</div>
+            <div class="step-label">采购员提交</div>
+            <div class="step-sub">沈亮 · 04-04 09:30</div>
+          </div>
+          <div class="approval-step active">
+            <div class="step-circle">2</div>
+            <div class="step-label">采购负责人审批</div>
+            <div class="step-sub">您（王主管）· 待处理</div>
+          </div>
+          <div class="approval-step">
+            <div class="step-circle">3</div>
+            <div class="step-label">财务负责人审批</div>
+            <div class="step-sub">待前置通过后开放</div>
+          </div>
+          <div class="approval-step">
+            <div class="step-circle">4</div>
+            <div class="step-label">自动建档</div>
+            <div class="step-sub">两级通过后执行</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab-item active" onclick="switchApprovalTab(this,'atab-info')">供应商信息（只读）</div>
+        <div class="tab-item" onclick="switchApprovalTab(this,'atab-settle')">结算信息</div>
+        <div class="tab-item" onclick="switchApprovalTab(this,'atab-log')">操作日志</div>
+      </div>
+
+      <!-- ATab: Info -->
+      <div id="atab-info">
+        <div class="form-section">
+          <div class="form-section-header"><span class="icon">🏢</span><h3>企业基本信息</h3>
+            <span style="margin-left:auto;font-size:11px;background:#f0f0f0;padding:2px 8px;border-radius:10px;color:#666">只读 · 采购员已确认</span>
+          </div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">供应商名称</label><input class="form-input" value="优鲜供应链科技公司" disabled></div>
+              <div class="form-group"><label class="form-label">供应商名称（英文）</label><input class="form-input" value="YouXian Supply Chain Technology Co." disabled></div>
+              <div class="form-group"><label class="form-label">联系人</label><input class="form-input" value="刘总" disabled></div>
+              <div class="form-group"><label class="form-label">联系方式</label><input class="form-input" value="+65 8888 7766" disabled></div>
+              <div class="form-group"><label class="form-label">供应商地址</label><input class="form-input" value="新加坡 Tuas South Ave 3 #05-08" disabled></div>
+              <div class="form-group"><label class="form-label">供应商单位类型</label><input class="form-input" value="有限责任公司" disabled></div>
+              <div class="form-group"><label class="form-label">纳税人类型</label><input class="form-input" value="一般纳税人" disabled></div>
+              <div class="form-group"><label class="form-label">纳税人识别号</label><input class="form-input" value="91310000MA2XC6XXXX" disabled></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-header"><span class="icon">⚙️</span><h3>内部管理字段（采购员填写）</h3></div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">供应商属性</label><input class="form-input" value="常规供应商" disabled></div>
+              <div class="form-group"><label class="form-label">供应商等级</label><input class="form-input" value="B级" disabled></div>
+              <div class="form-group"><label class="form-label">供应商性质</label><input class="form-input" value="贸易商" disabled></div>
+              <div class="form-group"><label class="form-label">是否参与结算</label><input class="form-input" value="是" disabled></div>
+              <div class="form-group"><label class="form-label">最晚付款日</label><input class="form-input" value="45天" disabled></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ATab: Settlement (Finance focus) -->
+      <div id="atab-settle" style="display:none">
+        <div style="background:#fffbe6;border:1px solid #ffe58f;border-radius:8px;padding:10px 16px;margin-bottom:14px;font-size:12px;color:#ad8b00">
+          <strong>财务关注：</strong>以下为供应商填写的结算信息，财务负责人将在第三步审核此内容
+        </div>
+        <div class="form-section">
+          <div class="form-section-header"><span class="icon">💰</span><h3>结算信息</h3></div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">付款类型</label><input class="form-input" value="后付费" disabled></div>
+              <div class="form-group"><label class="form-label">结算方式</label><input class="form-input" value="月结" disabled></div>
+              <div class="form-group"><label class="form-label">结算币种</label><input class="form-input" value="SGD" disabled></div>
+              <div class="form-group"><label class="form-label">财务联系人</label><input class="form-input" value="刘会计" disabled></div>
+              <div class="form-group"><label class="form-label">账户名称</label><input class="form-input" value="YOUXIAN SUPPLY CHAIN PTE LTD" disabled></div>
+              <div class="form-group"><label class="form-label">银行收款号</label><input class="form-input" value="6023-XXXX-9981" disabled></div>
+              <div class="form-group"><label class="form-label">银行大类</label><input class="form-input" value="DBS 星展银行" disabled></div>
+              <div class="form-group"><label class="form-label">SWIFT 代码</label><input class="form-input" value="DBSSSGSG" disabled></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ATab: Log -->
+      <div id="atab-log" style="display:none">
+        <div class="form-section">
+          <div class="form-section-header"><span class="icon">📝</span><h3>操作日志</h3></div>
+          <div class="form-section-body">
+            <div class="timeline">
+              <div class="timeline-item"><div class="timeline-dot blue">📋</div><div class="timeline-content"><div class="title">采购员提交审批</div><div class="desc">沈亮 完成信息核查并提交审批 · 2026-04-04 09:30</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot orange">📧</div><div class="timeline-content"><div class="title">系统通知采购负责人</div><div class="desc">已通知 王主管 · 2026-04-04 09:30</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot blue">📥</div><div class="timeline-content"><div class="title">供应商提交注册信息</div><div class="desc">优鲜供应链科技公司（刘总）通过链接提交 · 2026-04-04 08:55</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot green">📤</div><div class="timeline-content"><div class="title">采购发起注册邀请</div><div class="desc">沈亮 创建邀请并生成链接 · 2026-04-04 09:15</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: Field Config -->
+  <div class="page" id="page-config">
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">供应商管理 / 字段配置</div>
+        <h2>供应商表单字段配置中心</h2>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost">版本历史</button>
+        <button class="btn btn-primary" onclick="showToast('字段配置已发布（v1.3），新邀请链接将自动使用新版本，已发出的链接不受影响')">发布新版本</button>
+      </div>
+    </div>
+    <div class="content-area fade-in">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <!-- Left: Module selector -->
+        <div style="width:180px;flex-shrink:0">
+          <div style="background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden">
+            <div style="padding:12px 16px;font-size:12px;font-weight:600;color:#666;border-bottom:1px solid #f0f0f0">字段分组</div>
+            <div id="cfg-tab-basic" style="padding:10px 16px;font-size:13px;cursor:pointer;background:#4ecdc4;color:#fff;font-weight:500" onclick="switchCfgTab('basic')">企业基本信息</div>
+            <div id="cfg-tab-settle" style="padding:10px 16px;font-size:13px;cursor:pointer;color:#666" onclick="switchCfgTab('settle')">结算信息</div>
+            <div id="cfg-tab-cert" style="padding:10px 16px;font-size:13px;cursor:pointer;color:#666" onclick="switchCfgTab('cert')">资质证明</div>
+            <div id="cfg-tab-internal" style="padding:10px 16px;font-size:13px;cursor:pointer;color:#666" onclick="switchCfgTab('internal')">内部补充字段</div>
+          </div>
+          <div style="margin-top:12px;background:#f0fffe;border:1px solid #b5f5ec;border-radius:8px;padding:12px;font-size:11px;color:#555">
+            <div style="font-weight:600;color:#4ecdc4;margin-bottom:4px">当前版本</div>
+            <div>v1.2 · 2026-03-28</div>
+            <div style="margin-top:4px;color:#999">草稿变更待发布</div>
+          </div>
+        </div>
+
+        <!-- Right: Field list -->
+        <div style="flex:1">
+          <div id="cfg-panel-basic" style="display:block">
+            <div style="background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f0f0f0">
+                <div style="font-size:14px;font-weight:600">企业基本信息字段</div>
+                <button class="btn btn-outline btn-sm" onclick="showToast('请填写字段名称、类型后保存')">+ 添加字段</button>
+              </div>
+              <table class="config-table" style="width:100%">
+                <thead><tr>
+                  <th style="width:40px">排序</th>
+                  <th>字段名称</th>
+                  <th>字段类型</th>
+                  <th>填写方</th>
+                  <th style="width:60px">必填</th>
+                  <th style="width:60px">启用</th>
+                  <th style="width:80px">操作</th>
+                </tr></thead>
+                <tbody>
+                  <tr>
+                    <td style="color:#bbb">⠿</td>
+                    <td><strong>供应商名称</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">单行文本</span></td>
+                    <td style="font-size:12px;color:#666">供应商填写</td>
+                    <td><span style="color:#cf1322;font-size:12px">必填</span></td>
+                    <td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#bbb">⠿</td>
+                    <td><strong>供应商名称（英文）</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">单行文本</span></td>
+                    <td style="font-size:12px;color:#666">供应商填写</td>
+                    <td><span style="color:#999;font-size:12px">选填</span></td>
+                    <td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#bbb">⠿</td>
+                    <td><strong>供应商简称</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">单行文本</span></td>
+                    <td style="font-size:12px;color:#666">供应商填写</td>
+                    <td><span style="color:#cf1322;font-size:12px">必填</span></td>
+                    <td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#bbb">⠿</td>
+                    <td><strong>供应商地址</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">多行文本</span></td>
+                    <td style="font-size:12px;color:#666">供应商填写</td>
+                    <td><span style="color:#cf1322;font-size:12px">必填</span></td>
+                    <td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#bbb">⠿</td>
+                    <td><strong>联系人</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">单行文本</span></td>
+                    <td style="font-size:12px;color:#666">供应商填写</td>
+                    <td><span style="color:#cf1322;font-size:12px">必填</span></td>
+                    <td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#bbb">⠿</td>
+                    <td>
+                      <div><strong>注册国家 / 地区</strong></div>
+                      <div style="font-size:11px;color:#faad14;margin-top:2px">⚠ 草稿改动：新增字段，待发布</div>
+                    </td>
+                    <td><span style="background:#fff7e6;border:1px solid #ffd591;padding:1px 6px;border-radius:4px;font-size:11px;color:#d48806">下拉单选</span></td>
+                    <td style="font-size:12px;color:#666">供应商填写</td>
+                    <td><span style="color:#cf1322;font-size:12px">必填</span></td>
+                    <td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#bbb">⠿</td>
+                    <td><strong>纳税人类型</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">下拉单选</span></td>
+                    <td style="font-size:12px;color:#666">供应商填写</td>
+                    <td><span style="color:#cf1322;font-size:12px">必填</span></td>
+                    <td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#bbb">⠿</td>
+                    <td><strong>纳税人识别号</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">单行文本</span></td>
+                    <td style="font-size:12px;color:#666">供应商填写</td>
+                    <td><span style="color:#999;font-size:12px">选填</span></td>
+                    <td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="cfg-panel-settle" style="display:none">
+            <div style="background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f0f0f0">
+                <div style="font-size:14px;font-weight:600">结算信息字段</div>
+                <button class="btn btn-outline btn-sm" onclick="showToast('请填写字段名称、类型后保存')">+ 添加字段</button>
+              </div>
+              <table class="config-table" style="width:100%">
+                <thead><tr><th style="width:40px">排序</th><th>字段名称</th><th>字段类型</th><th>填写方</th><th style="width:60px">必填</th><th style="width:60px">启用</th><th style="width:80px">操作</th></tr></thead>
+                <tbody>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>付款类型</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">系统预设</span></td><td style="font-size:12px;color:#666">系统绑定</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm" style="opacity:.4" disabled>锁定</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>结算方式</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">下拉单选</span></td><td style="font-size:12px;color:#666">供应商填写</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>结算币种</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">系统预设</span></td><td style="font-size:12px;color:#666">系统绑定</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm" style="opacity:.4" disabled>锁定</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>银行收款号</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">单行文本</span></td><td style="font-size:12px;color:#666">供应商填写</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>SWIFT 代码</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">单行文本</span></td><td style="font-size:12px;color:#666">供应商填写</td><td><span style="color:#999;font-size:12px">选填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="cfg-panel-cert" style="display:none">
+            <div style="background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:40px;text-align:center;color:#999;font-size:13px">
+              资质证明字段配置（营业执照、食品经营许可证等），点击"+ 添加字段"配置新的证件类型
+              <div style="margin-top:16px"><button class="btn btn-outline" onclick="showToast('请填写证件名称、是否必传后保存')">+ 添加证件类型</button></div>
+            </div>
+          </div>
+
+          <div id="cfg-panel-internal" style="display:none">
+            <div style="background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f0f0f0">
+                <div>
+                  <div style="font-size:14px;font-weight:600">内部补充字段</div>
+                  <div style="font-size:11px;color:#faad14;margin-top:2px">仅采购员可见，供应商不可见</div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="showToast('请填写字段名称、类型后保存')">+ 添加字段</button>
+              </div>
+              <table class="config-table" style="width:100%">
+                <thead><tr><th style="width:40px">排序</th><th>字段名称</th><th>字段类型</th><th>填写方</th><th style="width:60px">必填</th><th style="width:60px">启用</th><th style="width:80px">操作</th></tr></thead>
+                <tbody>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>供应商属性</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">下拉单选</span></td><td style="font-size:12px;color:#faad14">采购员填写</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>供应商等级</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">下拉单选</span></td><td style="font-size:12px;color:#faad14">采购员填写</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>供应商性质</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">下拉单选</span></td><td style="font-size:12px;color:#faad14">采购员填写</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>是否参与结算</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">单选</span></td><td style="font-size:12px;color:#faad14">采购员填写</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>最晚付款日</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">下拉单选</span></td><td style="font-size:12px;color:#faad14">采购员填写</td><td><span style="color:#cf1322;font-size:12px">必填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                  <tr><td style="color:#bbb">⠿</td><td><strong>合同扣点</strong></td><td><span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:11px">数字输入</span></td><td style="font-size:12px;color:#faad14">采购员填写</td><td><span style="color:#999;font-size:12px">选填</span></td><td><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></td><td><button class="btn btn-ghost btn-sm">编辑</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ===== MODAL: New Invite ===== -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>新建供应商注册邀请</h3><button class="modal-close" onclick="hideModal('invite-modal')">×</button></div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="form-group"><label class="form-label"><span class="req">*</span>供应商名称</label><input class="form-input" placeholder="请输入拟邀请的供应商名称"></div>
+        <div class="form-group"><label class="form-label"><span class="req">*</span>联系人</label><input class="form-input" placeholder="供应商联系人姓名"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group"><label class="form-label">联系方式</label><input class="form-input" placeholder="手机号 / 邮箱"></div>
+          <div class="form-group"><label class="form-label">链接有效期</label><select class="form-select"><option>7天</option><option>14天</option><option>30天</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" placeholder="可填写备注信息，供应商填写时可见" rows="2"></textarea></div>
+        <div style="background:#f0f7ff;border:1px solid #bae0ff;border-radius:6px;padding:10px 14px;font-size:12px;color:#555">
+          <span style="color:#1677ff;font-weight:600">自动绑定信息：</span>采购员 沈亮 · 小满新加坡(SG Xiaoman) · 币种 SGD
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('invite-modal')">取消</button>
+      <button class="btn btn-primary" onclick="createInvite()">生成链接与二维码</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Link & QR Result ===== -->
+<div class="modal-overlay" id="link-modal">
+  <div class="modal" style="width:600px">
+    <div class="modal-header"><h3>邀请链接与二维码</h3><button class="modal-close" onclick="hideModal('link-modal')">×</button></div>
+    <div class="modal-body">
+      <div style="background:#f0f7ff;border:1px solid #bae0ff;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px">
+        <div style="font-weight:600;color:#1677ff;margin-bottom:4px">链接已绑定采购人信息</div>
+        <div style="display:flex;gap:20px;color:#555"><span>采购员：<strong>沈亮</strong></span><span>站点：<strong>小满新加坡</strong></span><span>币种：<strong>SGD</strong></span></div>
+        <div style="color:#999;margin-top:3px;font-size:11px">供应商打开表单后自动关联以上信息</div>
+      </div>
+      <div style="display:flex;gap:18px;align-items:flex-start">
+        <div style="flex:1">
+          <div class="link-box" style="margin:0">
+            <div style="font-size:12px;color:#389e0d;font-weight:500">供应商填写链接</div>
+            <div class="link-url">https://scm.foodmax.com/s/INV20260405006</div>
+            <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;justify-content:center" onclick="showToast('链接已复制到剪贴板')">复制链接</button>
+          </div>
+          <div class="share-preview" style="margin-top:10px">
+            <div class="share-preview-header">微信 / WhatsApp 中展示的卡片预览</div>
+            <div class="share-preview-body">
+              <div class="preview-icon">F</div>
+              <div class="preview-text"><h4>Foodmax 供应商信息登记</h4><p>鲜达农产品有限公司 — 请点击填写供应商注册信息（对接人：沈亮）</p></div>
+            </div>
+          </div>
+        </div>
+        <div style="flex-shrink:0;text-align:center">
+          <div style="width:150px;height:150px;background:#fff;border:1px solid #e8e8e8;border-radius:8px;display:flex;align-items:center;justify-content:center">
+            <svg width="120" height="120" viewBox="0 0 130 130"><rect width="130" height="130" fill="#fff"/>
+              <g fill="#333">
+                <rect x="5" y="5" width="30" height="30" rx="2"/><rect x="9" y="9" width="22" height="22" fill="#fff" rx="1"/><rect x="13" y="13" width="14" height="14" rx="1"/>
+                <rect x="95" y="5" width="30" height="30" rx="2"/><rect x="99" y="9" width="22" height="22" fill="#fff" rx="1"/><rect x="103" y="13" width="14" height="14" rx="1"/>
+                <rect x="5" y="95" width="30" height="30" rx="2"/><rect x="9" y="99" width="22" height="22" fill="#fff" rx="1"/><rect x="13" y="103" width="14" height="14" rx="1"/>
+                <rect x="40" y="8" width="5" height="5"/><rect x="50" y="8" width="5" height="5"/><rect x="60" y="8" width="5" height="5"/><rect x="70" y="8" width="5" height="5"/><rect x="80" y="8" width="5" height="5"/>
+                <rect x="40" y="18" width="5" height="5"/><rect x="55" y="18" width="5" height="5"/><rect x="65" y="18" width="5" height="5"/><rect x="80" y="18" width="5" height="5"/>
+                <rect x="45" y="28" width="5" height="5"/><rect x="55" y="28" width="5" height="5"/><rect x="70" y="28" width="5" height="5"/><rect x="85" y="28" width="5" height="5"/>
+                <rect x="8" y="40" width="5" height="5"/><rect x="18" y="40" width="5" height="5"/><rect x="40" y="40" width="5" height="5"/><rect x="55" y="40" width="5" height="5"/><rect x="80" y="40" width="5" height="5"/><rect x="95" y="40" width="5" height="5"/><rect x="120" y="40" width="5" height="5"/>
+                <rect x="8" y="50" width="5" height="5"/><rect x="25" y="50" width="5" height="5"/><rect x="45" y="50" width="5" height="5"/><rect x="60" y="50" width="5" height="5"/><rect x="75" y="50" width="5" height="5"/><rect x="95" y="50" width="5" height="5"/><rect x="115" y="50" width="5" height="5"/>
+                <rect x="8" y="60" width="5" height="5"/><rect x="20" y="60" width="5" height="5"/><rect x="50" y="60" width="5" height="5"/><rect x="65" y="60" width="5" height="5"/><rect x="80" y="60" width="5" height="5"/><rect x="100" y="60" width="5" height="5"/>
+                <rect x="15" y="70" width="5" height="5"/><rect x="45" y="70" width="5" height="5"/><rect x="55" y="70" width="5" height="5"/><rect x="70" y="70" width="5" height="5"/><rect x="90" y="70" width="5" height="5"/><rect x="120" y="70" width="5" height="5"/>
+                <rect x="8" y="80" width="5" height="5"/><rect x="40" y="80" width="5" height="5"/><rect x="60" y="80" width="5" height="5"/><rect x="75" y="80" width="5" height="5"/><rect x="110" y="80" width="5" height="5"/>
+                <rect x="40" y="95" width="5" height="5"/><rect x="55" y="95" width="5" height="5"/><rect x="70" y="95" width="5" height="5"/><rect x="100" y="95" width="5" height="5"/><rect x="115" y="95" width="5" height="5"/>
+                <rect x="45" y="105" width="5" height="5"/><rect x="60" y="105" width="5" height="5"/><rect x="90" y="105" width="5" height="5"/><rect x="110" y="105" width="5" height="5"/>
+                <rect x="40" y="115" width="5" height="5"/><rect x="65" y="115" width="5" height="5"/><rect x="80" y="115" width="5" height="5"/><rect x="120" y="115" width="5" height="5"/>
+              </g>
+              <rect x="50" y="50" width="30" height="30" rx="4" fill="#4ecdc4"/><text x="65" y="70" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">F</text>
+            </svg>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:8px;width:150px;justify-content:center" onclick="showToast('二维码图片已下载')">下载二维码</button>
+          <p style="font-size:10px;color:#999;margin-top:4px;width:150px">微信扫码或 WhatsApp<br>直接发送图片均可使用</p>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:#fffbe6;border:1px solid #ffe58f;border-radius:6px;font-size:12px;color:#ad8b00">
+        <strong>使用方式：</strong>复制链接通过 WhatsApp / 微信发送给供应商，或下载二维码让供应商扫码。表单已适配微信和 WhatsApp 内置浏览器。
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#999">
+        · 有效期至 2026-04-12 · 无需登录 · 提交后采购员 沈亮 将收到通知
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="hideModal('link-modal')">关闭</button></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Quick QR ===== -->
+<div class="modal-overlay" id="qr-quick-modal">
+  <div class="modal" style="width:360px">
+    <div class="modal-header"><h3>二维码</h3><button class="modal-close" onclick="hideModal('qr-quick-modal')">×</button></div>
+    <div class="modal-body" style="text-align:center">
+      <p style="font-size:13px;color:#333;margin-bottom:12px">绿源食品科技公司</p>
+      <div style="width:180px;height:180px;background:#fff;border:1px solid #e8e8e8;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto">
+        <svg width="140" height="140" viewBox="0 0 130 130"><rect width="130" height="130" fill="#fff"/>
+          <g fill="#333">
+            <rect x="5" y="5" width="30" height="30" rx="2"/><rect x="9" y="9" width="22" height="22" fill="#fff" rx="1"/><rect x="13" y="13" width="14" height="14" rx="1"/>
+            <rect x="95" y="5" width="30" height="30" rx="2"/><rect x="99" y="9" width="22" height="22" fill="#fff" rx="1"/><rect x="103" y="13" width="14" height="14" rx="1"/>
+            <rect x="5" y="95" width="30" height="30" rx="2"/><rect x="9" y="99" width="22" height="22" fill="#fff" rx="1"/><rect x="13" y="103" width="14" height="14" rx="1"/>
+            <rect x="40" y="10" width="4" height="4"/><rect x="52" y="10" width="4" height="4"/><rect x="64" y="10" width="4" height="4"/><rect x="76" y="10" width="4" height="4"/>
+            <rect x="40" y="22" width="4" height="4"/><rect x="56" y="22" width="4" height="4"/><rect x="72" y="22" width="4" height="4"/><rect x="84" y="22" width="4" height="4"/>
+            <rect x="10" y="42" width="4" height="4"/><rect x="22" y="42" width="4" height="4"/><rect x="42" y="42" width="4" height="4"/><rect x="58" y="42" width="4" height="4"/><rect x="78" y="42" width="4" height="4"/><rect x="98" y="42" width="4" height="4"/><rect x="118" y="42" width="4" height="4"/>
+            <rect x="10" y="56" width="4" height="4"/><rect x="30" y="56" width="4" height="4"/><rect x="48" y="56" width="4" height="4"/><rect x="66" y="56" width="4" height="4"/><rect x="82" y="56" width="4" height="4"/><rect x="102" y="56" width="4" height="4"/>
+            <rect x="18" y="70" width="4" height="4"/><rect x="38" y="70" width="4" height="4"/><rect x="54" y="70" width="4" height="4"/><rect x="74" y="70" width="4" height="4"/><rect x="94" y="70" width="4" height="4"/><rect x="114" y="70" width="4" height="4"/>
+            <rect x="10" y="82" width="4" height="4"/><rect x="28" y="82" width="4" height="4"/><rect x="46" y="82" width="4" height="4"/><rect x="64" y="82" width="4" height="4"/><rect x="82" y="82" width="4" height="4"/><rect x="108" y="82" width="4" height="4"/>
+            <rect x="42" y="98" width="4" height="4"/><rect x="58" y="98" width="4" height="4"/><rect x="78" y="98" width="4" height="4"/><rect x="102" y="98" width="4" height="4"/>
+            <rect x="48" y="112" width="4" height="4"/><rect x="68" y="112" width="4" height="4"/><rect x="88" y="112" width="4" height="4"/><rect x="116" y="112" width="4" height="4"/>
+          </g>
+          <rect x="50" y="50" width="30" height="30" rx="4" fill="#4ecdc4"/><text x="65" y="70" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">F</text>
+        </svg>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+        <button class="btn btn-outline btn-sm" onclick="showToast('二维码已下载')">下载二维码</button>
+        <button class="btn btn-primary btn-sm" onclick="showToast('链接已复制')">复制链接</button>
+      </div>
+      <p style="font-size:11px;color:#999;margin-top:8px">有效期至 2026-04-08 · 对接人：沈亮</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Approve (Submit for Approval) ===== -->
+<div class="modal-overlay" id="approve-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header"><h3>确认提交审批</h3><button class="modal-close" onclick="hideModal('approve-modal')">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">采购员已核查信息，确认提交至<strong>采购负责人</strong>进行审批？</p>
+      <div style="background:#f0f7ff;border:1px solid #91caff;border-radius:8px;padding:14px;margin-bottom:14px">
+        <p style="font-size:13px"><strong>供应商：</strong>鲜达农产品有限公司</p>
+        <p style="font-size:13px;margin-top:4px"><strong>联系人：</strong>张经理</p>
+        <p style="font-size:13px;margin-top:4px"><strong>操作人：</strong>沈亮（采购员）</p>
+      </div>
+      <div class="approval-steps" style="margin:0 0 4px 0">
+        <div class="approval-step done">
+          <div class="step-circle" style="width:28px;height:28px;font-size:11px">✓</div>
+          <div class="step-label" style="font-size:10px">采购员</div>
+        </div>
+        <div class="approval-step active">
+          <div class="step-circle" style="width:28px;height:28px;font-size:11px">2</div>
+          <div class="step-label" style="font-size:10px">采购负责人</div>
+        </div>
+        <div class="approval-step">
+          <div class="step-circle" style="width:28px;height:28px;font-size:11px">3</div>
+          <div class="step-label" style="font-size:10px">财务负责人</div>
+        </div>
+        <div class="approval-step">
+          <div class="step-circle" style="width:28px;height:28px;font-size:11px">4</div>
+          <div class="step-label" style="font-size:10px">自动建档</div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:#999;margin-top:6px">提交后将通知采购负责人审批，您可在操作日志中跟踪进度</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('approve-modal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmApprove()">确认提交审批</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Reject (Return for Edit) ===== -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal" style="width:440px">
+    <div class="modal-header"><h3>退回供应商信息</h3><button class="modal-close" onclick="hideModal('reject-modal')">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">退回后供应商可重新修改信息并提交，请填写退回原因（供应商可见）：</p>
+      <div class="form-group">
+        <label class="form-label"><span class="req">*</span>退回原因</label>
+        <textarea class="form-textarea" rows="3" placeholder="请说明需要修改的内容，如：结算账户信息有误，请重新填写"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('reject-modal')">取消</button>
+      <button class="btn btn-danger" onclick="confirmReject()">确认退回</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Approval Pass ===== -->
+<div class="modal-overlay" id="approval-pass-modal">
+  <div class="modal" style="width:440px">
+    <div class="modal-header"><h3>确认审批通过</h3><button class="modal-close" onclick="hideModal('approval-pass-modal')">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">确认通过本次供应商注册审批？通过后将流转至<strong>财务负责人</strong>进行二级审批。</p>
+      <div style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;padding:14px">
+        <p style="font-size:13px"><strong>供应商：</strong>优鲜供应链科技公司</p>
+        <p style="font-size:13px;margin-top:4px"><strong>审批人：</strong>王主管（采购负责人）</p>
+        <p style="font-size:12px;color:#52c41a;margin-top:6px">✓ 通过后系统自动通知财务负责人进行第三步审批</p>
+      </div>
+      <div class="form-group" style="margin-top:14px">
+        <label class="form-label">审批意见（选填）</label>
+        <textarea class="form-textarea" rows="2" placeholder="可填写审批备注..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('approval-pass-modal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmApprovalPass()" style="background:#52c41a">确认通过</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Approval Reject ===== -->
+<div class="modal-overlay" id="approval-reject-modal">
+  <div class="modal" style="width:440px">
+    <div class="modal-header"><h3>审批退回</h3><button class="modal-close" onclick="hideModal('approval-reject-modal')">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">退回后采购员需修改信息重新提交，流程将<strong>从第2步重新开始</strong>。</p>
+      <div class="form-group">
+        <label class="form-label"><span class="req">*</span>退回原因</label>
+        <textarea class="form-textarea" rows="3" placeholder="请说明退回原因，采购员将收到通知..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('approval-reject-modal')">取消</button>
+      <button class="btn btn-danger" onclick="confirmApprovalReject()">确认退回</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    document.querySelectorAll('.topbar-tab').forEach(t=>t.classList.remove('active'));
+    const idx={invite:0,review:1,approval:2,list:3,config:4}[id];
+    if(idx!==undefined) document.querySelectorAll('.topbar-tab')[idx].classList.add('active');
+    // sidebar active state
+    document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+    const sidebarIdx={list:4,config:5}[id];
+    if(sidebarIdx!==undefined) document.querySelectorAll('.menu-item')[sidebarIdx].classList.add('active');
+    else document.querySelectorAll('.menu-item')[3].classList.add('active'); // default: 注册邀请
+    window.scrollTo(0,0);
+  }
+  function showModal(id){document.getElementById(id).classList.add('show')}
+  function hideModal(id){document.getElementById(id).classList.remove('show')}
+  function showToast(msg,color){
+    const t=document.getElementById('toast');
+    t.textContent=msg;
+    t.style.background=color||'#52c41a';
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2800);
+  }
+  function createInvite(){hideModal('invite-modal');setTimeout(()=>showModal('link-modal'),250)}
+
+  // Review page tabs (4 tabs now)
+  function switchTab(el,tabId){
+    document.querySelectorAll('#page-review .tab-item').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    ['tab-info','tab-internal','tab-flow','tab-log'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display=id===tabId?'block':'none';
+    });
+  }
+
+  // Approval page tabs
+  function switchApprovalTab(el,tabId){
+    document.querySelectorAll('#page-approval .tab-item').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    ['atab-info','atab-settle','atab-log'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display=id===tabId?'block':'none';
+    });
+  }
+
+  // Config page tab switcher
+  function switchCfgTab(tab){
+    ['basic','settle','cert','internal'].forEach(t=>{
+      document.getElementById('cfg-tab-'+t).style.background='';
+      document.getElementById('cfg-tab-'+t).style.color='#666';
+      document.getElementById('cfg-panel-'+t).style.display='none';
+    });
+    document.getElementById('cfg-tab-'+tab).style.background='#4ecdc4';
+    document.getElementById('cfg-tab-'+tab).style.color='#fff';
+    document.getElementById('cfg-panel-'+tab).style.display='block';
+  }
+
+  // Review page: submit for approval
+  function approveSupplier(){showModal('approve-modal')}
+  function confirmApprove(){
+    hideModal('approve-modal');
+    showToast('已提交审批，等待采购负责人审核');
+    // update status badge in header
+    const badge=document.querySelector('#page-review h2 .badge');
+    if(badge){badge.className='badge badge-reviewing';badge.textContent='待采购负责人审批';}
+  }
+  function confirmReject(){hideModal('reject-modal');showToast('已退回，供应商将收到修改通知','#fa8c16')}
+
+  // Approval page actions (采购负责人)
+  function confirmApprovalPass(){
+    hideModal('approval-pass-modal');
+    showToast('审批通过！已通知财务负责人进行二级审批');
+    setTimeout(()=>showPage('invite'),1600);
+  }
+  function confirmApprovalReject(){
+    hideModal('approval-reject-modal');
+    showToast('已退回，采购员将收到通知重新修改','#fa8c16');
+    setTimeout(()=>showPage('invite'),1600);
+  }
+</script>
+</body>
+</html>
