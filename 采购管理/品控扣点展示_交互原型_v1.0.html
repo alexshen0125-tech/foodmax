@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<!-- 品控扣点展示 — 交互原型 v1.0
+     日期：2026-04-08
+     场景：采购端（SCM）+ 供应商端（VMS）品控扣点信息展示
+     新增：采购单详情「品控扣点」Tab + 供应商门户扣点通知视图
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>品控扣点展示 — 交互原型 v1.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #3B5AF5;
+      --primary-light: #EEF1FE;
+      --success: #16A34A;
+      --success-light: #DCFCE7;
+      --warning: #D97706;
+      --warning-light: #FFFBEB;
+      --danger: #DC2626;
+      --danger-light: #FEF2F2;
+      --text: #0F172A;
+      --text-2: #475569;
+      --text-3: #94A3B8;
+      --border: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --surface: #F8FAFC;
+      --surface-2: #F1F5F9;
+      --bg: #F1F5F9;
+      --white: #FFFFFF;
+      --qc-orange: #EA580C;
+      --qc-orange-light: #FFF7ED;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Layout ── */
+    .shell { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 220px; flex: none;
+      background: var(--text);
+      padding: 0;
+      display: flex; flex-direction: column;
+    }
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      font-size: 16px; font-weight: 700; color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-logo span { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.45); margin-top:2px; display:block; }
+    .nav-section { padding: 16px 12px 4px; font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,0.3); letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 12px; border-radius: 8px; margin: 1px 8px;
+      font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6);
+      cursor: pointer; transition: all .15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .nav-item.active { background: rgba(59,90,245,0.35); color: #fff; }
+    .nav-icon { width: 16px; height: 16px; opacity: .7; }
+
+    .main { flex: 1; overflow-y: auto; }
+
+    /* ── View switcher ── */
+    .view-switcher {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 28px; background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+    .view-btn {
+      padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--border);
+      font-size: 12.5px; font-weight: 600; cursor: pointer;
+      transition: all .15s; background: transparent; color: var(--text-2);
+    }
+    .view-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .view-label { font-size: 12px; color: var(--text-3); margin-left: 8px; }
+
+    /* ── Page ── */
+    .page { display: none; padding: 24px 28px; }
+    .page.active { display: block; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: 700; color: var(--text); }
+    .page-subtitle { font-size: 13px; color: var(--text-3); margin-top: 2px; }
+    .breadcrumb { font-size: 12.5px; color: var(--text-3); margin-bottom: 6px; }
+    .breadcrumb a { color: var(--primary); text-decoration: none; }
+
+    /* ── Cards ── */
+    .card { background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 16px; }
+    .card-title { font-size: 13px; font-weight: 700; color: var(--text-2); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+
+    /* ── Info grid ── */
+    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .info-item label { font-size: 12px; color: var(--text-3); display: block; margin-bottom: 3px; }
+    .info-item .val { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .info-item .val.mono { font-family: monospace; font-size: 13px; }
+
+    /* ── Tabs ── */
+    .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0; }
+    .tab-item {
+      padding: 11px 18px; font-size: 13px; font-weight: 600;
+      color: var(--text-3); cursor: pointer; border-bottom: 2.5px solid transparent;
+      margin-bottom: -1px; transition: all .15s; white-space: nowrap;
+    }
+    .tab-item:hover { color: var(--text-2); }
+    .tab-item.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-panel { display: none; padding: 20px 0 0; }
+    .tab-panel.active { display: block; }
+
+    /* ── Table ── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: var(--surface); color: var(--text-2); font-weight: 600; font-size: 12px; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface); }
+
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+    .badge-ok    { background: var(--success-light); color: var(--success); }
+    .badge-warn  { background: var(--warning-light); color: var(--warning); }
+    .badge-qc    { background: var(--qc-orange-light); color: var(--qc-orange); }
+    .badge-gray  { background: var(--surface-2); color: var(--text-2); }
+    .badge-blue  { background: var(--primary-light); color: var(--primary); }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #2e48e0; }
+    .btn-secondary { background: var(--surface-2); color: var(--text-2); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-sm { padding: 5px 11px; font-size: 12.5px; }
+
+    /* ── QC deduction specific ── */
+    .qc-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-bottom: 20px;
+    }
+    .qc-stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+    }
+    .qc-stat label { font-size: 11.5px; color: var(--text-3); font-weight: 500; display: block; margin-bottom: 4px; }
+    .qc-stat .num { font-size: 22px; font-weight: 700; color: var(--text); }
+    .qc-stat .num.danger { color: var(--danger); }
+    .qc-stat .num.warning { color: var(--warning); }
+    .qc-stat .unit { font-size: 12px; color: var(--text-3); margin-left: 2px; font-weight: 500; }
+
+    .qc-banner {
+      padding: 12px 16px; border-radius: 10px;
+      background: var(--qc-orange-light); border: 1px solid #FED7AA;
+      display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px;
+    }
+    .qc-banner-icon { font-size: 16px; flex: none; margin-top: 1px; }
+    .qc-banner-text { font-size: 12.5px; color: #9A3412; line-height: 1.6; }
+    .qc-banner-text strong { font-weight: 700; }
+
+    /* ── Photo thumbnails ── */
+    .photo-list { display: flex; gap: 8px; flex-wrap: wrap; }
+    .photo-thumb {
+      width: 56px; height: 56px; border-radius: 8px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; overflow: hidden; position: relative;
+      font-size: 20px; color: var(--text-3);
+    }
+    .photo-thumb:hover { border-color: var(--primary); }
+    .photo-thumb .photo-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.45);
+      display: none; align-items: center; justify-content: center;
+      font-size: 11px; color: #fff; font-weight: 600;
+    }
+    .photo-thumb:hover .photo-overlay { display: flex; }
+    .photo-more {
+      width: 56px; height: 56px; border-radius: 8px;
+      background: var(--surface-2); border: 1px dashed var(--border-strong);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11.5px; font-weight: 600; color: var(--text-3); cursor: pointer;
+    }
+
+    /* ── Deduction row highlight ── */
+    tr.has-deduction td { background: #FFFBEB; }
+    tr.has-deduction td:first-child { border-left: 3px solid var(--qc-orange); }
+
+    /* ── Tag ── */
+    .tag-new { display: inline-block; font-size: 10px; background: var(--qc-orange); color: #fff; border-radius: 4px; padding: 1px 5px; font-weight: 700; vertical-align: middle; margin-left: 4px; }
+
+    /* ── VMS vendor view ── */
+    .vms-header {
+      background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 100%);
+      padding: 16px 28px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .vms-header-title { color: #fff; font-size: 15px; font-weight: 700; }
+    .vms-header-sub { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 2px; }
+    .vms-body { padding: 24px 28px; }
+
+    .alert-banner {
+      display: flex; gap: 12px; padding: 14px 18px; border-radius: 10px;
+      background: #FEF3C7; border: 1px solid #FDE68A; margin-bottom: 20px;
+    }
+    .alert-icon { font-size: 20px; flex: none; }
+    .alert-content {}
+    .alert-title { font-size: 13.5px; font-weight: 700; color: #92400E; margin-bottom: 3px; }
+    .alert-desc { font-size: 12.5px; color: #78350F; line-height: 1.6; }
+
+    .deduction-card {
+      border: 1px solid #FED7AA; border-radius: 12px; overflow: hidden; margin-bottom: 16px;
+    }
+    .deduction-card-header {
+      padding: 12px 16px; background: var(--qc-orange-light);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .deduction-card-header .sku { font-size: 13.5px; font-weight: 700; color: var(--text); }
+    .deduction-card-body { padding: 16px; background: #fff; }
+    .deduction-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+    .d-field label { font-size: 11.5px; color: var(--text-3); display: block; margin-bottom: 3px; }
+    .d-field .val { font-size: 13.5px; font-weight: 600; }
+    .d-field .val.red { color: var(--danger); }
+    .d-field .val.orange { color: var(--qc-orange); }
+
+    .reason-box {
+      padding: 10px 14px; background: var(--surface); border-radius: 8px;
+      border: 1px solid var(--border); margin-bottom: 14px;
+    }
+    .reason-box label { font-size: 11.5px; color: var(--text-3); display: block; margin-bottom: 4px; }
+    .reason-box .text { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,0.5); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 14px; width: 560px; max-width: 95vw;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-close { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 20px; line-height: 1; padding: 4px; }
+    .modal-body { padding: 20px 24px; }
+    .modal-section-title { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 10px; }
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .photo-full {
+      aspect-ratio: 4/3; border-radius: 8px; background: var(--surface-2);
+      border: 1px solid var(--border); display: flex; align-items: center;
+      justify-content: center; font-size: 28px; color: var(--text-3); cursor: pointer;
+      overflow: hidden;
+    }
+    .photo-full:hover { border-color: var(--primary); }
+
+    /* ── Flex utils ── */
+    .flex { display: flex; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .gap-8 { gap: 8px; }
+    .mb-12 { margin-bottom: 12px; }
+    .mb-16 { margin-bottom: 16px; }
+    .text-danger { color: var(--danger); font-weight: 700; }
+    .text-orange { color: var(--qc-orange); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- ── View switcher bar ── -->
+<div class="view-switcher">
+  <button class="view-btn active" onclick="switchView('scm')">SCM 采购端</button>
+  <button class="view-btn" onclick="switchView('vms')">VMS 供应商端</button>
+  <span class="view-label">切换视角查看品控扣点展示</span>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCM 采购端视图
+════════════════════════════════════════════ -->
+<div id="view-scm" class="active" style="display:flex;">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div>
+        <div>Foodmax SCM</div>
+        <span>采购管理系统</span>
+      </div>
+    </div>
+    <div class="nav-section">采购管理</div>
+    <div class="nav-item active">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      采购单
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h18M3 14h18M10 3v18M14 3v18" stroke-linecap="round"/></svg>
+      结算单
+    </div>
+    <div class="nav-section">品控管理</div>
+    <div class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      质检报告
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      扣点记录
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="page active" id="pg-scm-detail">
+      <div class="breadcrumb" style="margin-bottom:8px;">
+        <a href="#">采购单</a> / PO-2026-0018
+      </div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">PO-2026-0018</div>
+          <div class="page-subtitle" style="margin-top:4px;">
+            <span class="badge badge-ok" style="margin-right:6px;">已完成</span>
+            Sunrise Fresh (CN) · 新加坡中央仓 · 2026-04-05 入库
+          </div>
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-secondary btn-sm">打印</button>
+          <button class="btn btn-secondary btn-sm">复制</button>
+        </div>
+      </div>
+
+      <!-- 基础信息 -->
+      <div class="card">
+        <div class="info-grid">
+          <div class="info-item"><label>供应商</label><div class="val">Sunrise Fresh (CN)</div></div>
+          <div class="info-item"><label>仓库</label><div class="val">新加坡中央仓</div></div>
+          <div class="info-item"><label>结算币种</label><div class="val">USD</div></div>
+          <div class="info-item"><label>采购金额（含税）</label><div class="val">USD 5,400.00</div></div>
+          <div class="info-item"><label>期望到货时间</label><div class="val">2026-04-03</div></div>
+          <div class="info-item"><label>实际入库时间</label><div class="val">2026-04-05</div></div>
+          <div class="info-item"><label>入库单号</label><div class="val mono">ASN-20260405-0032</div></div>
+          <div class="info-item"><label>货柜号</label><div class="val mono">TCKU3456789</div></div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="card" style="padding:0;">
+        <div style="padding:0 20px;">
+          <div class="tab-bar">
+            <div class="tab-item" onclick="switchScmTab('items')">商品明细</div>
+            <div class="tab-item active" onclick="switchScmTab('qc')">
+              品控扣点 <span class="tag-new">NEW</span>
+              <span style="margin-left:6px;background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;">2 项</span>
+            </div>
+            <div class="tab-item" onclick="switchScmTab('inbound')">入库记录</div>
+            <div class="tab-item" onclick="switchScmTab('logs')">操作记录</div>
+          </div>
+        </div>
+
+        <!-- Tab: 商品明细 -->
+        <div id="scm-tab-items" class="tab-panel" style="padding:0 20px 20px;">
+          <div class="tbl-wrap" style="margin-top:16px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>商品名称</th>
+                  <th>采购数量</th>
+                  <th>可送达数量</th>
+                  <th>入库数量</th>
+                  <th style="background:#FFF7ED;">扣点数量 <span class="tag-new">NEW</span></th>
+                  <th style="background:#FFF7ED;">扣点后净量 <span class="tag-new">NEW</span></th>
+                  <th>采购单价</th>
+                  <th>采购金额</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="has-deduction">
+                  <td class="mono" style="font-size:12px;">SKU-1024</td>
+                  <td style="font-weight:600;">马铃薯（进口）</td>
+                  <td>100 kg</td>
+                  <td>100 kg</td>
+                  <td>100 kg</td>
+                  <td style="background:#FFF7ED;">
+                    <span class="text-orange">−20 kg</span>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:2px;">扣点 20%</div>
+                  </td>
+                  <td style="background:#FFF7ED;font-weight:700;">80 kg</td>
+                  <td>USD 8.00/kg</td>
+                  <td>USD 800.00</td>
+                </tr>
+                <tr class="has-deduction">
+                  <td class="mono" style="font-size:12px;">SKU-1031</td>
+                  <td style="font-weight:600;">大葱（进口）</td>
+                  <td>50 kg</td>
+                  <td>50 kg</td>
+                  <td>50 kg</td>
+                  <td style="background:#FFF7ED;">
+                    <span class="text-orange">−5 kg</span>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:2px;">扣点 10%</div>
+                  </td>
+                  <td style="background:#FFF7ED;font-weight:700;">45 kg</td>
+                  <td>USD 3.50/kg</td>
+                  <td>USD 175.00</td>
+                </tr>
+                <tr>
+                  <td class="mono" style="font-size:12px;">SKU-1008</td>
+                  <td style="font-weight:600;">胡萝卜（进口）</td>
+                  <td>80 kg</td>
+                  <td>80 kg</td>
+                  <td>80 kg</td>
+                  <td style="color:var(--text-3);font-size:12.5px;">—</td>
+                  <td style="font-weight:600;">80 kg</td>
+                  <td>USD 2.20/kg</td>
+                  <td>USD 176.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab: 品控扣点 (active) -->
+        <div id="scm-tab-qc" class="tab-panel active" style="padding:0 20px 20px;">
+
+          <!-- QC Banner -->
+          <div class="qc-banner" style="margin-top:16px;">
+            <div class="qc-banner-icon">⚠️</div>
+            <div class="qc-banner-text">
+              本采购单存在 <strong>2 项品控扣点</strong>，由品控系统于 <strong>2026-04-05 15:42</strong> 录入。
+              扣点总量 <strong>25 kg</strong>，涉及金额 <strong>USD 177.50</strong>，将自动计入结算单扣减项。
+            </div>
+          </div>
+
+          <!-- QC stats -->
+          <div class="qc-summary">
+            <div class="qc-stat">
+              <label>扣点 SKU 数</label>
+              <div class="num warning">2 <span class="unit">项</span></div>
+            </div>
+            <div class="qc-stat">
+              <label>扣点总量</label>
+              <div class="num danger">25 <span class="unit">kg</span></div>
+            </div>
+            <div class="qc-stat">
+              <label>扣点涉及金额</label>
+              <div class="num danger">USD <span style="font-size:18px;">177.50</span></div>
+            </div>
+            <div class="qc-stat">
+              <label>品控操作人</label>
+              <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:6px;">王品控</div>
+              <div style="font-size:11.5px;color:var(--text-3);">品控部 · 2026-04-05 15:42</div>
+            </div>
+          </div>
+
+          <!-- QC detail table -->
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>商品名称</th>
+                  <th>入库数量</th>
+                  <th>扣点数量</th>
+                  <th>扣点比例</th>
+                  <th>扣点原因</th>
+                  <th>照片凭证</th>
+                  <th>扣点后净量</th>
+                  <th>涉及金额</th>
+                  <th style="width:80px;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono" style="font-size:12px;">SKU-1024</td>
+                  <td style="font-weight:600;">马铃薯（进口）</td>
+                  <td>100 kg</td>
+                  <td><span class="text-orange">−20 kg</span></td>
+                  <td>
+                    <span class="badge badge-qc">20%</span>
+                  </td>
+                  <td style="max-width:160px;">
+                    <div style="font-size:12.5px;">腐烂变质</div>
+                    <div style="font-size:11.5px;color:var(--text-3);">表面软烂，有异味，约 20kg 不可入库</div>
+                  </td>
+                  <td>
+                    <div class="photo-list">
+                      <div class="photo-thumb" onclick="showModal('modal-photo')">
+                        🥔
+                        <div class="photo-overlay">查看</div>
+                      </div>
+                      <div class="photo-thumb" onclick="showModal('modal-photo')">
+                        📸
+                        <div class="photo-overlay">查看</div>
+                      </div>
+                      <div class="photo-thumb" onclick="showModal('modal-photo')">
+                        📷
+                        <div class="photo-overlay">查看</div>
+                      </div>
+                      <div class="photo-more" onclick="showModal('modal-photo')">+2</div>
+                    </div>
+                  </td>
+                  <td style="font-weight:700;color:var(--text);">80 kg</td>
+                  <td><span class="text-danger">−USD 160.00</span></td>
+                  <td>
+                    <a href="javascript:void(0)" style="color:var(--primary);font-size:12.5px;font-weight:500;text-decoration:none;" onclick="showModal('modal-photo')">查看详情</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="mono" style="font-size:12px;">SKU-1031</td>
+                  <td style="font-weight:600;">大葱（进口）</td>
+                  <td>50 kg</td>
+                  <td><span class="text-orange">−5 kg</span></td>
+                  <td>
+                    <span class="badge badge-warn">10%</span>
+                  </td>
+                  <td style="max-width:160px;">
+                    <div style="font-size:12.5px;">损伤变黄</div>
+                    <div style="font-size:11.5px;color:var(--text-3);">外层叶片大面积枯黄，约 5kg 品质不达标</div>
+                  </td>
+                  <td>
+                    <div class="photo-list">
+                      <div class="photo-thumb" onclick="showModal('modal-photo')">
+                        🌿
+                        <div class="photo-overlay">查看</div>
+                      </div>
+                      <div class="photo-thumb" onclick="showModal('modal-photo')">
+                        📸
+                        <div class="photo-overlay">查看</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="font-weight:700;color:var(--text);">45 kg</td>
+                  <td><span class="text-danger">−USD 17.50</span></td>
+                  <td>
+                    <a href="javascript:void(0)" style="color:var(--primary);font-size:12.5px;font-weight:500;text-decoration:none;" onclick="showModal('modal-photo')">查看详情</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Total -->
+          <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="text-align:right;">
+              <div style="font-size:12.5px;color:var(--text-3);margin-bottom:4px;">扣点金额合计</div>
+              <div style="font-size:22px;font-weight:800;color:var(--danger);">−USD 177.50</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:3px;">将在结算单中自动扣减</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: 入库记录 -->
+        <div id="scm-tab-inbound" class="tab-panel" style="padding:16px 20px 20px;">
+          <p style="color:var(--text-3);font-size:13px;">入库记录内容（略）</p>
+        </div>
+
+        <!-- Tab: 操作记录 -->
+        <div id="scm-tab-logs" class="tab-panel" style="padding:16px 20px 20px;">
+          <p style="color:var(--text-3);font-size:13px;">操作记录内容（略）</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     VMS 供应商端视图
+════════════════════════════════════════════ -->
+<div id="view-vms" style="display:none;flex-direction:column;min-height:calc(100vh - 41px);">
+
+  <!-- VMS Top bar -->
+  <div class="vms-header">
+    <div>
+      <div class="vms-header-title">Foodmax 供应商门户</div>
+      <div class="vms-header-sub">Sunrise Fresh (CN) · 采购单详情</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:12.5px;color:rgba(255,255,255,0.6);">Sunrise Fresh (CN)</span>
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">S</div>
+    </div>
+  </div>
+
+  <div class="vms-body" style="flex:1;background:var(--bg);">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb mb-12">
+      <a href="#">采购单列表</a> / PO-2026-0018
+    </div>
+
+    <!-- Order header card -->
+    <div class="card mb-16">
+      <div class="flex-between mb-12">
+        <div>
+          <div style="font-size:16px;font-weight:700;">PO-2026-0018</div>
+          <div style="font-size:12.5px;color:var(--text-3);margin-top:3px;">2026-04-01 创建 · 入库时间：2026-04-05</div>
+        </div>
+        <span class="badge badge-ok" style="font-size:12.5px;padding:4px 12px;">已完成</span>
+      </div>
+      <div class="info-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="info-item"><label>仓库</label><div class="val">新加坡中央仓</div></div>
+        <div class="info-item"><label>结算币种</label><div class="val">USD</div></div>
+        <div class="info-item"><label>采购金额</label><div class="val">USD 1,151.00</div></div>
+      </div>
+    </div>
+
+    <!-- 品控扣点通知 Banner (key new feature) -->
+    <div class="alert-banner mb-16">
+      <div class="alert-icon">🔔</div>
+      <div class="alert-content">
+        <div class="alert-title">品控扣点通知</div>
+        <div class="alert-desc">
+          本次送货经 Foodmax 品控验收，共发现 <strong>2 项质量问题</strong>，扣点金额合计 <strong>USD 177.50</strong>，将在本单结算时扣减。详情及照片凭证见下方。如有异议，请在 <strong>7 个工作日内</strong> 联系采购对接人。
+        </div>
+      </div>
+    </div>
+
+    <!-- 扣点详情 cards -->
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">
+      品控扣点明细
+      <span style="font-size:11.5px;font-weight:500;color:var(--text-3);margin-left:8px;">2026-04-05 15:42 · 品控部</span>
+    </div>
+
+    <!-- Deduction card 1 -->
+    <div class="deduction-card mb-16">
+      <div class="deduction-card-header">
+        <div>
+          <div class="sku">马铃薯（进口）<span style="font-size:11.5px;color:var(--text-3);font-weight:500;margin-left:6px;">SKU-1024</span></div>
+        </div>
+        <span class="badge badge-qc">扣点 20%</span>
+      </div>
+      <div class="deduction-card-body">
+        <div class="deduction-fields">
+          <div class="d-field">
+            <label>送货数量</label>
+            <div class="val">100 kg</div>
+          </div>
+          <div class="d-field">
+            <label>扣点数量</label>
+            <div class="val red">−20 kg</div>
+          </div>
+          <div class="d-field">
+            <label>结算净量</label>
+            <div class="val" style="color:var(--success);">80 kg</div>
+          </div>
+          <div class="d-field">
+            <label>单价</label>
+            <div class="val">USD 8.00/kg</div>
+          </div>
+          <div class="d-field">
+            <label>扣减金额</label>
+            <div class="val red">−USD 160.00</div>
+          </div>
+        </div>
+        <div class="reason-box">
+          <label>扣点原因</label>
+          <div class="text">腐烂变质：表面软烂，有异味，约 20 kg 不可入库使用，货物已现场留存待处理。</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;color:var(--text-3);margin-bottom:8px;">照片凭证（5 张）</div>
+          <div class="photo-list">
+            <div class="photo-thumb" onclick="showModal('modal-vms-photo')">🥔<div class="photo-overlay">查看</div></div>
+            <div class="photo-thumb" onclick="showModal('modal-vms-photo')">📸<div class="photo-overlay">查看</div></div>
+            <div class="photo-thumb" onclick="showModal('modal-vms-photo')">📷<div class="photo-overlay">查看</div></div>
+            <div class="photo-more" onclick="showModal('modal-vms-photo')">+2</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deduction card 2 -->
+    <div class="deduction-card mb-16">
+      <div class="deduction-card-header">
+        <div>
+          <div class="sku">大葱（进口）<span style="font-size:11.5px;color:var(--text-3);font-weight:500;margin-left:6px;">SKU-1031</span></div>
+        </div>
+        <span class="badge badge-warn">扣点 10%</span>
+      </div>
+      <div class="deduction-card-body">
+        <div class="deduction-fields">
+          <div class="d-field">
+            <label>送货数量</label>
+            <div class="val">50 kg</div>
+          </div>
+          <div class="d-field">
+            <label>扣点数量</label>
+            <div class="val red">−5 kg</div>
+          </div>
+          <div class="d-field">
+            <label>结算净量</label>
+            <div class="val" style="color:var(--success);">45 kg</div>
+          </div>
+          <div class="d-field">
+            <label>单价</label>
+            <div class="val">USD 3.50/kg</div>
+          </div>
+          <div class="d-field">
+            <label>扣减金额</label>
+            <div class="val red">−USD 17.50</div>
+          </div>
+        </div>
+        <div class="reason-box">
+          <label>扣点原因</label>
+          <div class="text">损伤变黄：外层叶片大面积枯黄，约 5 kg 品质不达标，不符合入库标准。</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;color:var(--text-3);margin-bottom:8px;">照片凭证（2 张）</div>
+          <div class="photo-list">
+            <div class="photo-thumb" onclick="showModal('modal-vms-photo')">🌿<div class="photo-overlay">查看</div></div>
+            <div class="photo-thumb" onclick="showModal('modal-vms-photo')">📸<div class="photo-overlay">查看</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total summary -->
+    <div class="card" style="border-color:#FED7AA;background:var(--qc-orange-light);">
+      <div class="flex-between">
+        <div>
+          <div style="font-size:13.5px;font-weight:700;color:#9A3412;">本单扣点合计</div>
+          <div style="font-size:12px;color:#C2410C;margin-top:3px;">将在结算单中自动扣减，无需重新提交</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:26px;font-weight:800;color:var(--danger);">−USD 177.50</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:2px;">实际结算金额：USD <strong style="color:var(--text);">973.50</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dispute note -->
+    <div style="text-align:center;padding:16px 0;font-size:12.5px;color:var(--text-3);">
+      如对扣点结果有异议，请在 <strong style="color:var(--text);">7 个工作日</strong> 内联系采购对接人 · 逾期视为确认
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ── Photo Modal (SCM) ── -->
+<div class="modal-overlay" id="modal-photo">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">品控照片凭证 — 马铃薯（进口）SKU-1024</div>
+      <button class="modal-close" onclick="hideModal('modal-photo')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:16px;margin-bottom:16px;padding:14px;background:var(--surface);border-radius:10px;">
+        <div style="flex:1;"><div style="font-size:11.5px;color:var(--text-3);">扣点数量</div><div style="font-size:18px;font-weight:700;color:var(--qc-orange);">−20 kg</div></div>
+        <div style="flex:1;"><div style="font-size:11.5px;color:var(--text-3);">扣点比例</div><div style="font-size:18px;font-weight:700;color:var(--qc-orange);">20%</div></div>
+        <div style="flex:1;"><div style="font-size:11.5px;color:var(--text-3);">涉及金额</div><div style="font-size:18px;font-weight:700;color:var(--danger);">−USD 160.00</div></div>
+        <div style="flex:1;"><div style="font-size:11.5px;color:var(--text-3);">品控人员</div><div style="font-size:14px;font-weight:600;">王品控</div></div>
+      </div>
+      <div style="padding:12px 14px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;margin-bottom:16px;font-size:13px;color:#9A3412;">
+        <strong>扣点原因：</strong>腐烂变质：表面软烂，有异味，约 20 kg 不可入库使用，货物已现场留存待处理。
+      </div>
+      <div class="modal-section-title">现场照片（5 张）</div>
+      <div class="photo-grid">
+        <div class="photo-full">🥔</div>
+        <div class="photo-full">📦</div>
+        <div class="photo-full">🔍</div>
+        <div class="photo-full">📸</div>
+        <div class="photo-full">📷</div>
+      </div>
+      <div style="margin-top:14px;font-size:12px;color:var(--text-3);">
+        拍摄时间：2026-04-05 14:30 ~ 15:10 · 品控部 · 新加坡中央仓
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Photo Modal (VMS) ── -->
+<div class="modal-overlay" id="modal-vms-photo">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">品控凭证照片 — 马铃薯（进口）</div>
+      <button class="modal-close" onclick="hideModal('modal-vms-photo')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="padding:12px 14px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;margin-bottom:16px;font-size:13px;color:#9A3412;">
+        <strong>扣点原因：</strong>腐烂变质：表面软烂，有异味，约 20 kg 不可入库使用。
+      </div>
+      <div class="photo-grid">
+        <div class="photo-full">🥔</div>
+        <div class="photo-full">📦</div>
+        <div class="photo-full">🔍</div>
+        <div class="photo-full">📸</div>
+        <div class="photo-full">📷</div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:var(--surface);border-radius:8px;font-size:12px;color:var(--text-3);">
+        以上照片由 Foodmax 品控部于验收时拍摄，作为扣点依据存档。如有异议请联系采购对接人。
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function switchView(v) {
+    document.getElementById('view-scm').style.display = v === 'scm' ? 'flex' : 'none';
+    document.getElementById('view-vms').style.display = v === 'vms' ? 'flex' : 'none';
+    document.querySelectorAll('.view-btn').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && v === 'scm') || (i === 1 && v === 'vms'));
+    });
+  }
+
+  function switchScmTab(tab) {
+    ['items','qc','inbound','logs'].forEach(t => {
+      document.getElementById('scm-tab-' + t).classList.toggle('active', t === tab);
+    });
+    document.querySelectorAll('#view-scm .tab-item').forEach((el, i) => {
+      const tabs = ['items','qc','inbound','logs'];
+      el.classList.toggle('active', tabs[i] === tab);
+    });
+  }
+
+  function showModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.classList.add('open'); }
+  }
+  function hideModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.classList.remove('open'); }
+  }
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+</script>
+</body>
+</html>
