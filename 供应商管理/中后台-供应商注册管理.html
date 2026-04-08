@@ -176,8 +176,7 @@
     </div>
     <div class="menu-group">
       <div class="menu-group-title">供应商管理</div>
-      <div class="menu-item active" onclick="showPage('invite')"><span class="icon">📨</span>注册邀请</div>
-      <div class="menu-item" onclick="showPage('list')"><span class="icon">🏢</span>供应商列表</div>
+      <div class="menu-item active" onclick="showPage('list')"><span class="icon">🏢</span>供应商列表</div>
       <div class="menu-item" onclick="showPage('config')"><span class="icon">⚙️</span>字段配置</div>
       <div class="menu-item"><span class="icon">📄</span>合同管理</div>
     </div>
@@ -188,10 +187,9 @@
 <header class="topbar">
   <div class="topbar-left">
     <div class="topbar-tabs">
-      <button class="topbar-tab active" onclick="showPage('invite')">注册邀请管理 <span class="tab-close">×</span></button>
-      <button class="topbar-tab" onclick="showPage('review')">审核详情 <span class="tab-close">×</span></button>
+      <button class="topbar-tab active" onclick="showPage('list')">供应商列表 <span class="tab-close">×</span></button>
+      <button class="topbar-tab" onclick="showPage('review')">待确认详情 <span class="tab-close">×</span></button>
       <button class="topbar-tab" onclick="showPage('approval')">审批详情 <span class="tab-close">×</span></button>
-      <button class="topbar-tab" onclick="showPage('list')">供应商列表 <span class="tab-close">×</span></button>
       <button class="topbar-tab" onclick="showPage('config')">字段配置 <span class="tab-close">×</span></button>
     </div>
   </div>
@@ -212,7 +210,7 @@
 <div class="main">
 
   <!-- PAGE: Invite List -->
-  <div class="page active" id="page-invite">
+  <div class="page" id="page-invite">
     <div class="page-header">
       <div>
         <div class="breadcrumb">供应商管理 / 注册邀请</div>
@@ -223,29 +221,29 @@
     <div class="content-area fade-in">
       <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center">
         <input class="form-input" placeholder="搜索供应商名称..." style="width:220px">
-        <select class="form-select"><option>全部状态</option><option>待填写</option><option>已提交待审核</option><option>待采购负责人审批</option><option>待财务审批</option><option>审批退回</option><option>已通过</option><option>已过期</option></select>
+        <select class="form-select"><option>全部状态</option><option>待填写</option><option>待采购确认</option><option>待采购负责人审批</option><option>待财务审批</option><option>审批驳回</option><option>已通过</option><option>已作废</option><option>已过期</option></select>
         <button class="btn btn-ghost btn-sm">搜索</button>
         <span style="margin-left:auto;font-size:12px;color:#999">共 5 条邀请</span>
       </div>
       <table class="data-table">
         <thead><tr>
-          <th>邀请编号</th><th>供应商名称</th><th>联系人</th><th>发起人</th><th>发起时间</th><th>有效期</th><th>状态</th><th>操作</th>
+          <th>邀请编号</th><th>供应商名称</th><th>纳税人识别号</th><th>发起人</th><th>发起时间</th><th>有效期</th><th>状态</th><th>操作</th>
         </tr></thead>
         <tbody>
           <tr>
-            <td>INV-20260404-010</td><td>优鲜供应链科技公司</td><td>刘总</td><td>沈亮</td>
+            <td>INV-20260404-010</td><td>优鲜供应链科技公司</td><td>91310000MA2XC6XXXX</td><td>沈亮</td>
             <td>2026-04-04 09:15</td><td>2026-04-11</td>
             <td><span class="badge badge-reviewing">待采购负责人审批</span><span class="notif-dot"></span></td>
             <td><button class="btn btn-primary btn-sm" onclick="showPage('approval')">去审批</button></td>
           </tr>
           <tr>
-            <td>INV-20260401-001</td><td>鲜达农产品有限公司</td><td>张经理</td><td>沈亮</td>
+            <td>INV-20260401-001</td><td>鲜达农产品有限公司</td><td>91310000MA1FL8XXXX</td><td>沈亮</td>
             <td>2026-04-01 14:30</td><td>2026-04-08</td>
-            <td><span class="badge badge-pending">已提交待审核</span><span class="notif-dot"></span></td>
-            <td><button class="btn btn-primary btn-sm" onclick="showPage('review')">去审核</button></td>
+            <td><span class="badge badge-pending">待采购确认</span><span class="notif-dot"></span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="showPage('review')">去确认</button></td>
           </tr>
           <tr>
-            <td>INV-20260401-002</td><td>绿源食品科技公司</td><td>李总</td><td>沈亮</td>
+            <td>INV-20260401-002</td><td>绿源食品科技公司</td><td>91440300MA5FCXXX</td><td>沈亮</td>
             <td>2026-04-01 10:15</td><td>2026-04-08</td>
             <td><span class="badge badge-draft">待填写</span></td>
             <td>
@@ -254,13 +252,13 @@
             </td>
           </tr>
           <tr>
-            <td>INV-20260330-005</td><td>汇丰水产贸易公司</td><td>王经理</td><td>陈晓</td>
+            <td>INV-20260330-005</td><td>汇丰水产贸易公司</td><td>91310115MA1GBXXX</td><td>陈晓</td>
             <td>2026-03-30 09:20</td><td>2026-04-06</td>
             <td><span class="badge badge-approved">已通过</span></td>
             <td><button class="btn btn-ghost btn-sm">查看详情</button></td>
           </tr>
           <tr>
-            <td>INV-20260315-009</td><td>天宏冷链物流</td><td>周经理</td><td>沈亮</td>
+            <td>INV-20260315-009</td><td>天宏冷链物流</td><td>91310104MA1H7XXXX</td><td>沈亮</td>
             <td>2026-03-15 16:00</td><td>2026-03-22</td>
             <td><span class="badge badge-expired">已过期</span></td>
             <td><span style="font-size:12px;color:#bbb">—</span></td>
@@ -274,13 +272,13 @@
   <div class="page" id="page-review">
     <div class="page-header">
       <div>
-        <div class="breadcrumb">供应商管理 / 注册邀请 / 审核</div>
-        <h2>供应商信息审核 <span class="badge badge-pending" style="font-size:11px;vertical-align:middle;margin-left:6px">待审核</span></h2>
+        <div class="breadcrumb">供应商管理 / 注册邀请 / 采购确认</div>
+        <h2>供应商信息确认 <span class="badge badge-pending" style="font-size:11px;vertical-align:middle;margin-left:6px">待采购确认</span></h2>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="showPage('invite')">返回列表</button>
-        <button class="btn btn-danger" onclick="showModal('reject-modal')">退回修改</button>
-        <button class="btn btn-primary" onclick="approveSupplier()">提交审批</button>
+        <button class="btn btn-ghost" onclick="showPage('list')">返回列表</button>
+        <button class="btn btn-danger" onclick="showModal('void-modal')">作废</button>
+        <button class="btn btn-primary" onclick="approveSupplier()" style="background:#52c41a">确认，转审批</button>
       </div>
     </div>
     <div class="content-area fade-in">
@@ -305,10 +303,16 @@
               <div class="form-group"><label class="form-label">供应商简称</label><input class="form-input" value="鲜达农产"></div>
               <div class="form-group"><label class="form-label">供应商地址</label><input class="form-input" value="新加坡 Jurong East Street 21 #03-05"></div>
               <div class="form-group"><label class="form-label">联系人</label><input class="form-input" value="张经理"></div>
-              <div class="form-group"><label class="form-label">联系方式</label><input class="form-input" value="+65 9123 4567"></div>
+              <div class="form-group"><label class="form-label">电话号码</label><input class="form-input" value="+65 9123 4567"></div>
               <div class="form-group"><label class="form-label">供应商单位类型</label><select class="form-select"><option selected>有限责任公司</option></select></div>
               <div class="form-group"><label class="form-label">纳税人类型</label><select class="form-select"><option selected>一般纳税人</option></select></div>
-              <div class="form-group"><label class="form-label">纳税人识别号</label><input class="form-input" value="91310000MA1FL8XXXX"></div>
+              <div class="form-group">
+                <label class="form-label">纳税人识别号</label>
+                <input class="form-input" value="91310000MA1FL8XXXX" style="border-color:#faad14">
+                <div style="margin-top:4px;font-size:11px;color:#d46b08;background:#fffbe6;border:1px solid #ffe58f;border-radius:4px;padding:4px 8px">
+                  ⚠ E-15：系统中已存在相同纳税人识别号，请核实是否重复建档
+                </div>
+              </div>
               <div class="form-group"><label class="form-label">定价方式</label><select class="form-select"><option selected>含税</option></select></div>
             </div>
           </div>
@@ -421,17 +425,12 @@
   </div>
 
   <!-- PAGE: Supplier List -->
-  <div class="page" id="page-list">
+  <div class="page active" id="page-list">
     <div class="page-header">
       <div><div class="breadcrumb">供应商管理</div><h2>供应商列表</h2></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-primary" onclick="showModal('invite-modal')">新建</button>
-        <button class="btn btn-outline">批量配置</button>
-        <button class="btn btn-ghost">导出</button>
-      </div>
     </div>
     <div class="content-area fade-in">
-      <!-- Filter bar matching real system -->
+      <!-- Filter bar -->
       <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666">
           <span>供应商编号（旧）：</span><input class="form-input" placeholder="请输入" style="width:130px">
@@ -442,12 +441,58 @@
         <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666">
           <span>供应商名称：</span><input class="form-input" placeholder="请输入" style="width:140px">
         </div>
-        <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666">
+        <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666" id="filter-status-all">
           <span>供应商状态：</span><select class="form-select" style="width:100px"><option>全部</option><option>合作</option><option>停用</option></select>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#666" id="filter-status-pending" style="display:none">
+          <span>审核状态：</span><select class="form-select" style="width:160px"><option>全部</option><option>待采购确认</option><option>待采购负责人审批</option><option>待财务审批</option><option>审批驳回</option></select>
         </div>
         <button class="btn btn-primary btn-sm">查询</button>
         <button class="btn btn-ghost btn-sm">重置</button>
       </div>
+
+      <!-- Tabs + Action buttons -->
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #f0f0f0;margin-bottom:16px">
+        <div style="display:flex">
+          <div class="tab-item active" id="list-tab-all" onclick="switchListTab('all')" style="margin-bottom:-2px">全部供应商</div>
+          <div class="tab-item" id="list-tab-pending" onclick="switchListTab('pending')" style="margin-bottom:-2px">待审核 <span style="background:#ff4d4f;color:#fff;border-radius:8px;padding:1px 6px;font-size:11px;margin-left:4px">2</span></div>
+        </div>
+        <div style="display:flex;gap:8px;padding-bottom:4px">
+          <button class="btn btn-primary btn-sm" onclick="showModal('invite-modal')">邀请入驻</button>
+          <button class="btn btn-outline btn-sm" onclick="showToast('手动新建供应商')">手动新建</button>
+          <button class="btn btn-ghost btn-sm">批量配置</button>
+          <button class="btn btn-ghost btn-sm">导出</button>
+        </div>
+      </div>
+
+      <!-- 待审核 Tab Content -->
+      <div id="list-pending-content" style="display:none">
+        <table class="data-table">
+          <thead><tr>
+            <th>邀请编号</th><th>供应商名称</th><th>纳税人识别号</th><th>发起人</th><th>发起时间</th><th>当前状态</th><th>操作</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td>INV-20260404-010</td><td>优鲜供应链科技公司</td><td>91310000MA2XC6XXXX</td><td>沈亮</td>
+              <td>2026-04-04 09:15</td>
+              <td><span class="badge badge-reviewing">待采购负责人审批</span></td>
+              <td><button class="btn btn-primary btn-sm" onclick="showPage('approval')">去审批</button></td>
+            </tr>
+            <tr>
+              <td>INV-20260401-001</td><td>鲜达农产品有限公司</td><td>91310000MA1FL8XXXX</td><td>沈亮</td>
+              <td>2026-04-01 14:30</td>
+              <td><span class="badge badge-pending">待采购确认</span></td>
+              <td><button class="btn btn-primary btn-sm" onclick="showPage('review')">去确认</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size:12px;color:#999;margin-top:10px;padding:4px">
+          💡 供应商审批通过后将自动移至「全部供应商」列表并完成建档
+        </div>
+      </div>
+
+      <!-- 全部供应商 Tab Content -->
+      <div id="list-all-content">
       <table class="data-table">
         <thead><tr>
           <th>供应商编号（旧）</th>
@@ -646,6 +691,7 @@
         </div>
         <span>前往 <input class="form-input" style="width:40px;padding:3px 6px;text-align:center" value="1"> 页</span>
       </div>
+      </div><!-- /list-all-content -->
     </div>
   </div>
 
@@ -658,7 +704,7 @@
         <h2>供应商审批 <span class="badge badge-reviewing" style="font-size:11px;vertical-align:middle;margin-left:6px">待采购负责人审批</span></h2>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="showPage('invite')">返回列表</button>
+        <button class="btn btn-ghost" onclick="showPage('list')">返回列表</button>
         <button class="btn btn-danger" onclick="showModal('approval-reject-modal')">审批退回</button>
         <button class="btn btn-primary" onclick="showModal('approval-pass-modal')" style="background:#52c41a">审批通过</button>
       </div>
@@ -670,21 +716,26 @@
         <div class="approval-steps">
           <div class="approval-step done">
             <div class="step-circle">✓</div>
-            <div class="step-label">采购员提交</div>
+            <div class="step-label">供应商提交</div>
+            <div class="step-sub">04-04 09:15</div>
+          </div>
+          <div class="approval-step done">
+            <div class="step-circle">✓</div>
+            <div class="step-label">采购确认</div>
             <div class="step-sub">沈亮 · 04-04 09:30</div>
           </div>
           <div class="approval-step active">
-            <div class="step-circle">2</div>
+            <div class="step-circle">3</div>
             <div class="step-label">采购负责人审批</div>
             <div class="step-sub">您（王主管）· 待处理</div>
           </div>
           <div class="approval-step">
-            <div class="step-circle">3</div>
+            <div class="step-circle">4</div>
             <div class="step-label">财务负责人审批</div>
             <div class="step-sub">待前置通过后开放</div>
           </div>
           <div class="approval-step">
-            <div class="step-circle">4</div>
+            <div class="step-circle">5</div>
             <div class="step-label">自动建档</div>
             <div class="step-sub">两级通过后执行</div>
           </div>
@@ -708,7 +759,7 @@
               <div class="form-group"><label class="form-label">供应商名称</label><input class="form-input" value="优鲜供应链科技公司" disabled></div>
               <div class="form-group"><label class="form-label">供应商名称（英文）</label><input class="form-input" value="YouXian Supply Chain Technology Co." disabled></div>
               <div class="form-group"><label class="form-label">联系人</label><input class="form-input" value="刘总" disabled></div>
-              <div class="form-group"><label class="form-label">联系方式</label><input class="form-input" value="+65 8888 7766" disabled></div>
+              <div class="form-group"><label class="form-label">电话号码</label><input class="form-input" value="+65 8888 7766" disabled></div>
               <div class="form-group"><label class="form-label">供应商地址</label><input class="form-input" value="新加坡 Tuas South Ave 3 #05-08" disabled></div>
               <div class="form-group"><label class="form-label">供应商单位类型</label><input class="form-input" value="有限责任公司" disabled></div>
               <div class="form-group"><label class="form-label">纳税人类型</label><input class="form-input" value="一般纳税人" disabled></div>
@@ -953,12 +1004,12 @@
     <div class="modal-body">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="form-group"><label class="form-label"><span class="req">*</span>供应商名称</label><input class="form-input" placeholder="请输入拟邀请的供应商名称"></div>
-        <div class="form-group"><label class="form-label"><span class="req">*</span>联系人</label><input class="form-input" placeholder="供应商联系人姓名"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div class="form-group"><label class="form-label">联系方式</label><input class="form-input" placeholder="手机号 / 邮箱"></div>
-          <div class="form-group"><label class="form-label">链接有效期</label><select class="form-select"><option>7天</option><option>14天</option><option>30天</option></select></div>
-        </div>
+        <div class="form-group"><label class="form-label"><span class="req">*</span>纳税人识别号</label><input class="form-input" placeholder="统一社会信用代码 / 组织机构代码" id="inviteTaxId"></div>
+        <div class="form-group"><label class="form-label">链接有效期</label><select class="form-select"><option>7天</option><option>14天</option><option>30天</option></select></div>
         <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" placeholder="可填写备注信息，供应商填写时可见" rows="2"></textarea></div>
+        <div style="background:#fff7e6;border:1px solid #ffd591;border-radius:6px;padding:10px 14px;font-size:12px;color:#555">
+          <span style="color:#d46b08;font-weight:600">⚠ 重复提交限制：</span>同一纳税人识别号在「待采购确认」或「待采购负责人审批」状态时，不支持再次发起邀请
+        </div>
         <div style="background:#f0f7ff;border:1px solid #bae0ff;border-radius:6px;padding:10px 14px;font-size:12px;color:#555">
           <span style="color:#1677ff;font-weight:600">自动绑定信息：</span>采购员 沈亮 · 小满新加坡(SG Xiaoman) · 币种 SGD
         </div>
@@ -1069,33 +1120,37 @@
 <!-- ===== MODAL: Approve (Submit for Approval) ===== -->
 <div class="modal-overlay" id="approve-modal">
   <div class="modal" style="width:480px">
-    <div class="modal-header"><h3>确认提交审批</h3><button class="modal-close" onclick="hideModal('approve-modal')">×</button></div>
+    <div class="modal-header"><h3>确认信息并转入审批</h3><button class="modal-close" onclick="hideModal('approve-modal')">×</button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:#555;margin-bottom:14px">采购员已核查信息，确认提交至<strong>采购负责人</strong>进行审批？</p>
+      <p style="font-size:13px;color:#555;margin-bottom:14px">采购员已核查信息，确认无误后将转至<strong>采购负责人</strong>进行审批。</p>
       <div style="background:#f0f7ff;border:1px solid #91caff;border-radius:8px;padding:14px;margin-bottom:14px">
         <p style="font-size:13px"><strong>供应商：</strong>鲜达农产品有限公司</p>
-        <p style="font-size:13px;margin-top:4px"><strong>联系人：</strong>张经理</p>
+        <p style="font-size:13px;margin-top:4px"><strong>纳税人识别号：</strong>91310000MA1FL8XXXX</p>
         <p style="font-size:13px;margin-top:4px"><strong>操作人：</strong>沈亮（采购员）</p>
       </div>
       <div class="approval-steps" style="margin:0 0 4px 0">
         <div class="approval-step done">
           <div class="step-circle" style="width:28px;height:28px;font-size:11px">✓</div>
-          <div class="step-label" style="font-size:10px">采购员</div>
+          <div class="step-label" style="font-size:10px">供应商提交</div>
+        </div>
+        <div class="approval-step done">
+          <div class="step-circle" style="width:28px;height:28px;font-size:11px">✓</div>
+          <div class="step-label" style="font-size:10px">采购确认</div>
         </div>
         <div class="approval-step active">
-          <div class="step-circle" style="width:28px;height:28px;font-size:11px">2</div>
+          <div class="step-circle" style="width:28px;height:28px;font-size:11px">3</div>
           <div class="step-label" style="font-size:10px">采购负责人</div>
         </div>
         <div class="approval-step">
-          <div class="step-circle" style="width:28px;height:28px;font-size:11px">3</div>
+          <div class="step-circle" style="width:28px;height:28px;font-size:11px">4</div>
           <div class="step-label" style="font-size:10px">财务负责人</div>
         </div>
         <div class="approval-step">
-          <div class="step-circle" style="width:28px;height:28px;font-size:11px">4</div>
+          <div class="step-circle" style="width:28px;height:28px;font-size:11px">5</div>
           <div class="step-label" style="font-size:10px">自动建档</div>
         </div>
       </div>
-      <p style="font-size:11px;color:#999;margin-top:6px">提交后将通知采购负责人审批，您可在操作日志中跟踪进度</p>
+      <p style="font-size:11px;color:#999;margin-top:6px">确认后将通知采购负责人审批，您可在操作日志中跟踪进度</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="hideModal('approve-modal')">取消</button>
@@ -1118,6 +1173,27 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="hideModal('reject-modal')">取消</button>
       <button class="btn btn-danger" onclick="confirmReject()">确认退回</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Void ===== -->
+<div class="modal-overlay" id="void-modal">
+  <div class="modal" style="width:440px">
+    <div class="modal-header"><h3>作废供应商注册</h3><button class="modal-close" onclick="hideModal('void-modal')">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">确认作废后，本次注册流程将终止。</p>
+      <div style="background:#fff7e6;border:1px solid #ffd591;border-radius:6px;padding:10px 14px;font-size:12px;color:#555;margin-bottom:14px">
+        <strong style="color:#d46b08">注意：</strong>若邀请链接仍在有效期内，供应商可通过原链接重新填写并提交。
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span class="req">*</span>作废原因</label>
+        <textarea class="form-textarea" rows="2" placeholder="请填写作废原因（内部记录）"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('void-modal')">取消</button>
+      <button class="btn btn-danger" onclick="confirmVoid()">确认作废</button>
     </div>
   </div>
 </div>
@@ -1230,17 +1306,42 @@
     if(badge){badge.className='badge badge-reviewing';badge.textContent='待采购负责人审批';}
   }
   function confirmReject(){hideModal('reject-modal');showToast('已退回，供应商将收到修改通知','#fa8c16')}
+  function confirmVoid(){hideModal('void-modal');showToast('已作废，若链接有效供应商可重新提交','#fa8c16');showPage('list')}
+
+  function switchListTab(tab){
+    const allContent = document.getElementById('list-all-content');
+    const pendingContent = document.getElementById('list-pending-content');
+    const tabAll = document.getElementById('list-tab-all');
+    const tabPending = document.getElementById('list-tab-pending');
+    const filterAll = document.getElementById('filter-status-all');
+    const filterPending = document.getElementById('filter-status-pending');
+    if(tab === 'all'){
+      allContent.style.display = '';
+      pendingContent.style.display = 'none';
+      tabAll.classList.add('active');
+      tabPending.classList.remove('active');
+      if(filterAll) filterAll.style.display = '';
+      if(filterPending) filterPending.style.display = 'none';
+    } else {
+      allContent.style.display = 'none';
+      pendingContent.style.display = '';
+      tabAll.classList.remove('active');
+      tabPending.classList.add('active');
+      if(filterAll) filterAll.style.display = 'none';
+      if(filterPending) filterPending.style.display = '';
+    }
+  }
 
   // Approval page actions (采购负责人)
   function confirmApprovalPass(){
     hideModal('approval-pass-modal');
     showToast('审批通过！已通知财务负责人进行二级审批');
-    setTimeout(()=>showPage('invite'),1600);
+    setTimeout(()=>showPage('list'),1600);
   }
   function confirmApprovalReject(){
     hideModal('approval-reject-modal');
     showToast('已退回，采购员将收到通知重新修改','#fa8c16');
-    setTimeout(()=>showPage('invite'),1600);
+    setTimeout(()=>showPage('list'),1600);
   }
 </script>
 </body>

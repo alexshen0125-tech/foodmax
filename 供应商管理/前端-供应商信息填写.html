@@ -191,11 +191,8 @@
           <input type="text" value="张经理">
         </div>
         <div class="field">
-          <label class="field-label"><span class="req">*</span>联系方式</label>
-          <div class="select-row">
-            <select><option>手机</option><option>座机</option></select>
-            <input type="tel" placeholder="+65">
-          </div>
+          <label class="field-label"><span class="req">*</span>电话号码</label>
+          <input type="tel" placeholder="+65 9123 4567" value="+65 9123 4567">
         </div>
       </div>
       <div class="field-row">
@@ -215,7 +212,10 @@
         </div>
         <div class="field">
           <label class="field-label"><span class="req">*</span>纳税人识别号</label>
-          <input type="text" placeholder="请输入">
+          <input type="text" placeholder="请输入" id="taxIdInput" oninput="checkTaxId(this)">
+          <div id="taxDupWarn" style="display:none;margin-top:5px;font-size:11px;color:#ff4d4f;background:#fff2f0;border:1px solid #ffccc7;border-radius:6px;padding:5px 10px">
+            ⚠ 该识别号已存在于系统中，请确认是否重复建档
+          </div>
         </div>
       </div>
       <div class="field">
@@ -360,7 +360,7 @@
         <div class="summary-grid">
           <div class="summary-item"><div class="s-label">供应商名称</div><div class="s-value">鲜达农产品有限公司</div></div>
           <div class="summary-item"><div class="s-label">联系人</div><div class="s-value">张经理</div></div>
-          <div class="summary-item"><div class="s-label">联系方式</div><div class="s-value">+65 9123 4567</div></div>
+          <div class="summary-item"><div class="s-label">电话号码</div><div class="s-value">+65 9123 4567</div></div>
           <div class="summary-item"><div class="s-label">地址</div><div class="s-value">Jurong East St 21 #03-05</div></div>
           <div class="summary-item"><div class="s-label">纳税人类型</div><div class="s-value">一般纳税人</div></div>
           <div class="summary-item"><div class="s-label">定价方式</div><div class="s-value">含税</div></div>
@@ -441,6 +441,20 @@
     window.scrollTo({top:0,behavior:'smooth'});
   }
   function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+
+  // 模拟税号重复校验（原型演示：输入18位触发重复提示）
+  function checkTaxId(input) {
+    const val = input.value.trim();
+    const warn = document.getElementById('taxDupWarn');
+    // 原型中：输入特定值模拟重复场景（91310000MA1FL8TEST 为已存在记录）
+    if (val.length === 18 && val.startsWith('91310000')) {
+      warn.style.display = 'block';
+      input.style.borderColor = '#ff4d4f';
+    } else {
+      warn.style.display = 'none';
+      input.style.borderColor = '';
+    }
+  }
 </script>
 </body>
 </html>

@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>采购结算 · 余额支付确认 — 交互原型</title>
+<style>
+  :root {
+    --primary: #2ba471;
+    --primary-light: #e8f5ee;
+    --primary-dark: #1a7a50;
+    --warning: #e8a317;
+    --warning-light: #fff7e6;
+    --danger: #d54941;
+    --danger-light: #fde8e8;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --radius: 8px;
+    --shadow: 0 1px 4px rgba(0,0,0,.08);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,.16);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: #f0f2f5; color: var(--gray-800); font-size: 13px; min-height: 100vh; }
+
+  /* Top Nav */
+  .nav { height: 48px; background: #fff; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; padding: 0 24px; gap: 12px; position: sticky; top: 0; z-index: 10; }
+  .nav-logo { font-weight: 700; font-size: 15px; color: var(--primary); }
+  .nav-bc { color: var(--gray-400); font-size: 13px; }
+  .nav-bc span { color: var(--gray-700); font-weight: 500; }
+  .nav-right { margin-left: auto; display: flex; gap: 8px; }
+
+  /* Page */
+  .page { max-width: 1100px; margin: 24px auto; padding: 0 24px; }
+  .page-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .page-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
+
+  /* Flow Steps */
+  .flow-steps { display: flex; align-items: center; gap: 0; margin-bottom: 32px; background: #fff; border-radius: var(--radius); padding: 18px 24px; box-shadow: var(--shadow); }
+  .flow-step { display: flex; align-items: center; gap: 8px; }
+  .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .step-circle.done { background: var(--primary); color: #fff; }
+  .step-circle.active { background: #fff; border: 2px solid var(--primary); color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+  .step-circle.pending { background: var(--gray-200); color: var(--gray-400); }
+  .step-label { font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .step-label.done { color: var(--primary); }
+  .step-label.active { color: var(--primary); }
+  .step-label.pending { color: var(--gray-400); }
+  .step-arrow { margin: 0 12px; color: var(--gray-300); font-size: 16px; flex-shrink: 0; }
+
+  /* Scenario tabs */
+  .scenario-tabs { display: flex; gap: 0; margin-bottom: 20px; background: #fff; border-radius: var(--radius); padding: 4px; box-shadow: var(--shadow); width: fit-content; }
+  .scenario-tab { padding: 7px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--gray-500); transition: all .18s; }
+  .scenario-tab.active { background: var(--primary); color: #fff; }
+  .scenario-tab:hover:not(.active) { background: var(--gray-100); color: var(--gray-700); }
+
+  /* Main card */
+  .main-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; gap: 8px; }
+  .status-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .badge-green { background: var(--primary-light); color: var(--primary); }
+  .badge-orange { background: var(--warning-light); color: var(--warning); }
+  .badge-gray { background: var(--gray-100); color: var(--gray-500); }
+
+  /* Settlement info */
+  .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 24px; margin-bottom: 20px; }
+  .info-item { display: flex; flex-direction: column; gap: 4px; }
+  .info-label { font-size: 11px; color: var(--gray-400); }
+  .info-value { font-size: 13px; color: var(--gray-800); font-weight: 500; }
+  .info-value.highlight { color: var(--primary); font-size: 15px; font-weight: 700; }
+  .info-value.amount { color: var(--gray-800); font-size: 14px; font-weight: 600; }
+
+  /* Invoice list */
+  .invoice-list { border: 1px solid var(--gray-200); border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+  .invoice-list-header { background: var(--gray-50); display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 8px 14px; font-size: 12px; font-weight: 500; color: var(--gray-500); border-bottom: 1px solid var(--gray-200); }
+  .invoice-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 10px 14px; border-bottom: 1px solid var(--gray-100); font-size: 12px; color: var(--gray-700); align-items: center; }
+  .invoice-row:last-child { border-bottom: none; }
+
+  /* Buttons */
+  .btn { height: 32px; padding: 0 16px; border-radius: 4px; border: 1px solid var(--gray-200); background: #fff; color: var(--gray-700); font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: inherit; }
+  .btn:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { background: var(--gray-300); border-color: var(--gray-300); color: #fff; cursor: not-allowed; }
+  .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn-lg { height: 38px; padding: 0 24px; font-size: 14px; }
+
+  /* ═══════════ 余额支付确认弹窗 ═══════════ */
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+  }
+  .modal-mask.show { opacity: 1; pointer-events: auto; }
+
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    width: 460px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    transform: translateY(12px) scale(.97);
+    transition: transform .25s;
+  }
+  .modal-mask.show .modal { transform: translateY(0) scale(1); }
+
+  .modal-header {
+    padding: 20px 24px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .modal-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .modal-title { font-size: 16px; font-weight: 600; color: var(--gray-800); }
+  .modal-subtitle { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+  .modal-body { padding: 16px 24px 20px; }
+
+  /* Settlement summary in modal */
+  .modal-summary {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .summary-item { display: flex; flex-direction: column; gap: 3px; }
+  .summary-label { font-size: 11px; color: var(--gray-400); }
+  .summary-value { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+  .summary-value.big { font-size: 16px; color: var(--primary); }
+  .summary-value.balance { color: var(--gray-800); }
+
+  /* Payment options */
+  .payment-options { display: flex; flex-direction: column; gap: 10px; }
+  .payment-option {
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all .18s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+  }
+  .payment-option:hover { border-color: var(--primary); background: var(--primary-light); }
+  .payment-option.selected { border-color: var(--primary); background: var(--primary-light); }
+  .payment-option.disabled { opacity: .5; cursor: not-allowed; background: var(--gray-50); }
+  .payment-option.disabled:hover { border-color: var(--gray-200); background: var(--gray-50); }
+
+  /* Amount input area */
+  .amount-input-row { display: none; margin-top: 12px; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .amount-currency { font-size: 13px; color: var(--gray-500); }
+  .amount-input {
+    height: 34px; border: 1.5px solid var(--gray-300); border-radius: 4px;
+    padding: 0 10px; font-size: 14px; font-weight: 600; color: var(--gray-800);
+    font-family: inherit; width: 150px; text-align: right;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .amount-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+  .amount-input.error { border-color: var(--danger); box-shadow: 0 0 0 2px var(--danger-light); }
+  .amount-input-hint { font-size: 11px; color: var(--gray-400); }
+  .amount-error-msg { display: none; font-size: 11px; color: var(--danger); width: 100%; margin-top: 2px; }
+  .amount-error-msg.show { display: block; }
+  .partial-note { display: none; font-size: 11px; color: var(--warning); background: var(--warning-light); border-radius: 4px; padding: 4px 8px; margin-top: 6px; width: 100%; }
+
+  .radio-circle {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all .15s;
+  }
+  .payment-option.selected .radio-circle { border-color: var(--primary); background: var(--primary); }
+  .radio-dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; display: none; }
+  .payment-option.selected .radio-dot { display: block; }
+
+  .option-content { flex: 1; }
+  .option-title { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 3px; }
+  .option-desc { font-size: 12px; color: var(--gray-500); line-height: 1.5; }
+  .option-tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 4px; margin-left: 6px; }
+  .tag-green { background: var(--primary-light); color: var(--primary); }
+  .tag-orange { background: var(--warning-light); color: var(--warning); }
+
+  /* Insufficient balance warning */
+  .balance-warning {
+    display: none;
+    margin-top: 10px;
+    background: var(--danger-light);
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--danger);
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .balance-warning.show { display: flex; }
+
+  /* Required note */
+  .required-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--gray-400);
+  }
+  .required-note::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--warning); flex-shrink: 0; }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--gray-50);
+  }
+
+  /* Success state */
+  .success-card {
+    display: none;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 40px 24px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .success-card.show { display: block; }
+  .success-icon { font-size: 48px; margin-bottom: 12px; }
+  .success-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--gray-800); }
+  .success-subtitle { font-size: 13px; color: var(--gray-500); line-height: 1.6; margin-bottom: 20px; }
+  .success-detail { display: inline-flex; gap: 24px; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 14px 24px; margin-bottom: 24px; }
+  .success-detail-item { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+  .success-detail-label { font-size: 11px; color: var(--gray-400); }
+  .success-detail-value { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+
+  /* Toast */
+  .toast { position: fixed; top: 60px; right: 24px; background: var(--gray-800); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; z-index: 300; box-shadow: var(--shadow-lg); opacity: 0; transform: translateY(-8px); transition: all .25s; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: var(--primary); }
+
+  /* Screen label */
+  .screen-label { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); background: var(--gray-800); color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 11px; z-index: 300; display: flex; align-items: center; gap: 8px; pointer-events: none; }
+  .screen-label .dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<div class="nav">
+  <div class="nav-logo">采购管理系统</div>
+  <div class="nav-bc">采购中心 / 结算管理 / <span>上传发票</span></div>
+  <div class="nav-right">
+    <div style="font-size:12px;color:var(--gray-400);">采购员：沈亮</div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-title">采购结算 · 余额支付确认</div>
+  <div class="page-desc">交互原型 — 展示发票提交成功后的余额支付强制确认步骤 · 供开发参考</div>
+
+  <!-- 流程步骤 -->
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="step-circle done">✓</div>
+      <div class="step-label done">选择单据</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="flow-step">
+      <div class="step-circle done">✓</div>
+      <div class="step-label done">上传发票</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="flow-step">
+      <div class="step-circle done">✓</div>
+      <div class="step-label done">金额校验通过</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="flow-step">
+      <div class="step-circle active">4</div>
+      <div class="step-label active">余额支付确认 <span style="color:var(--danger);font-size:11px;">（必选）</span></div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="flow-step">
+      <div class="step-circle pending">5</div>
+      <div class="step-label pending">结算完成</div>
+    </div>
+  </div>
+
+  <!-- 场景切换 -->
+  <div style="margin-bottom:16px;">
+    <div style="font-size:12px;color:var(--gray-500);margin-bottom:8px;">📋 演示场景</div>
+    <div class="scenario-tabs">
+      <div class="scenario-tab active" onclick="switchScenario('normal', this)">场景 A：余额充足</div>
+      <div class="scenario-tab" onclick="switchScenario('insufficient', this)">场景 B：余额不足</div>
+      <div class="scenario-tab" onclick="switchScenario('notuse', this)">场景 C：不使用余额</div>
+    </div>
+  </div>
+
+  <!-- 结算单信息卡 -->
+  <div class="main-card" id="settlementCard">
+    <div class="card-title">
+      结算单详情
+      <span class="status-badge badge-green">对账通过</span>
+    </div>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">结算单编号</div>
+        <div class="info-value">JS-20260407-0083</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">供应商</div>
+        <div class="info-value">BIG SAILING INTERNATIONAL PTE. LTD.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">结算金额（含税）</div>
+        <div class="info-value amount">$12,310.00</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">账户可用余额</div>
+        <div class="info-value highlight" id="balanceDisplay">$18,500.00</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">结算单据数</div>
+        <div class="info-value">3 张采购单</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">发票数量</div>
+        <div class="info-value">2 张</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">创建时间</div>
+        <div class="info-value">2026-04-07 15:18:32</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">支付方式</div>
+        <div class="info-value" id="paymentMethodDisplay"><span style="color:var(--warning);">⏳ 待确认</span></div>
+      </div>
+    </div>
+
+    <div class="invoice-list">
+      <div class="invoice-list-header">
+        <span>发票号码</span>
+        <span>发票类型</span>
+        <span>发票金额（含税）</span>
+        <span>发票日期</span>
+        <span>状态</span>
+      </div>
+      <div class="invoice-row">
+        <span>044002300115</span>
+        <span>增值税专用发票</span>
+        <span style="font-weight:600;">$8,250.00</span>
+        <span>2026-04-06</span>
+        <span class="status-badge badge-green">已使用</span>
+      </div>
+      <div class="invoice-row">
+        <span>044002300116</span>
+        <span>增值税普通发票</span>
+        <span style="font-weight:600;">$4,060.00</span>
+        <span>2026-04-06</span>
+        <span class="status-badge badge-green">已使用</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;">
+      <div style="font-size:12px;color:var(--warning);background:var(--warning-light);padding:8px 14px;border-radius:6px;flex:1;">
+        ⚠️ 发票已上传成功，已自动创建结算单【JS-20260407-0083】。请确认是否使用余额支付本次结算金额。
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="openPaymentModal()">确认支付方式 →</button>
+    </div>
+  </div>
+
+  <!-- 成功结果卡（确认后显示） -->
+  <div class="success-card" id="successCard">
+    <div class="success-icon" id="successIcon">✅</div>
+    <div class="success-title" id="successTitle">结算单创建成功</div>
+    <div class="success-subtitle" id="successSubtitle">发票已上传成功，结算单已创建，支付方式已确认。</div>
+    <div class="success-detail">
+      <div class="success-detail-item">
+        <div class="success-detail-label">结算单编号</div>
+        <div class="success-detail-value">JS-20260407-0083</div>
+      </div>
+      <div class="success-detail-item">
+        <div class="success-detail-label">结算金额</div>
+        <div class="success-detail-value">$12,310.00</div>
+      </div>
+      <div class="success-detail-item">
+        <div class="success-detail-label">支付方式</div>
+        <div class="success-detail-value" id="successPayment">余额支付</div>
+      </div>
+      <div class="success-detail-item">
+        <div class="success-detail-label">余额变动</div>
+        <div class="success-detail-value" id="successBalance">$18,500 → $6,190</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn" onclick="resetDemo()">重新演示</button>
+      <button class="btn btn-primary" onclick="showToast('已跳转至结算单列表', true)">查看结算单列表</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 余额支付确认弹窗 ═══════ -->
+<div class="modal-mask" id="paymentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon">💳</div>
+      <div>
+        <div class="modal-title">余额支付确认</div>
+        <div class="modal-subtitle">结算单 JS-20260407-0083 已创建，请选择支付方式</div>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <!-- 结算摘要 -->
+      <div class="modal-summary">
+        <div class="summary-item">
+          <div class="summary-label">本次结算金额</div>
+          <div class="summary-value big">$12,310.00</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">账户可用余额</div>
+          <div class="summary-value balance" id="modalBalance">$18,500.00</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">余额支付后剩余</div>
+          <div class="summary-value" id="modalRemaining" style="color:var(--primary);">$6,190.00</div>
+        </div>
+      </div>
+
+      <!-- 支付选项 -->
+      <div class="payment-options">
+        <div class="payment-option" id="optionUse" onclick="selectPayment('use')">
+          <div class="radio-circle"><div class="radio-dot"></div></div>
+          <div class="option-content">
+            <div class="option-title">
+              使用余额支付
+              <span class="option-tag tag-green" id="balanceSufficientTag">余额充足</span>
+            </div>
+            <div class="option-desc">从账户余额扣减，余额不足部分走正常付款流程</div>
+            <!-- 手动输入区（选中后显示） -->
+            <div class="amount-input-row" id="amountInputRow">
+              <span style="font-size:13px;color:var(--gray-600);font-weight:500;">支付金额</span>
+              <span class="amount-currency">$</span>
+              <input type="number" class="amount-input" id="payAmountInput"
+                min="0.01" step="0.01" placeholder="0.00"
+                oninput="onAmountInput(this)"
+                onclick="event.stopPropagation()">
+              <span class="amount-input-hint" id="amountHint"></span>
+            </div>
+            <div class="amount-error-msg" id="amountError"></div>
+            <div class="partial-note" id="partialNote"></div>
+          </div>
+        </div>
+        <div class="payment-option" id="optionNotUse" onclick="selectPayment('notuse')">
+          <div class="radio-circle"><div class="radio-dot"></div></div>
+          <div class="option-content">
+            <div class="option-title">不使用余额支付</div>
+            <div class="option-desc">走正常付款流程，账户余额不变，由财务按账期付款</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 余额不足提示 -->
+      <div class="balance-warning" id="balanceWarning">
+        <span>⚠️</span>
+        <span>当前账户余额不足，无法使用余额支付本次结算金额。请选择「不使用余额支付」。</span>
+      </div>
+
+      <!-- 必选提示 -->
+      <div class="required-note">必须选择一项后，方可点击「确认」继续。此选择将记录至结算单，创建后不支持修改。</div>
+    </div>
+
+    <div class="modal-footer">
+      <!-- 注意：无关闭按钮，必须选择才能确认 -->
+      <button class="btn btn-primary btn-lg" id="confirmBtn" disabled onclick="confirmPayment()" style="min-width:120px;">
+        确认
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="screen-label"><div class="dot"></div>采购结算 · 余额支付确认 · 交互原型</div>
+
+<script>
+let selectedPayment = null;
+let currentScenario = 'normal';
+const SETTLEMENT = 12310; // 结算金额（数值）
+
+const scenarios = {
+  normal:      { balance: '$18,500.00', balanceNum: 18500, balanceSufficient: true,  tag: '余额充足', tagClass: 'tag-green' },
+  insufficient:{ balance: '$5,000.00',  balanceNum: 5000,  balanceSufficient: false, tag: '余额不足', tagClass: 'tag-orange' },
+  notuse:      { balance: '$18,500.00', balanceNum: 18500, balanceSufficient: true,  tag: '余额充足', tagClass: 'tag-green' }
+};
+
+function fmt(num) {
+  return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function switchScenario(scenario, tab) {
+  currentScenario = scenario;
+  selectedPayment = null;
+  document.querySelectorAll('.scenario-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById('balanceDisplay').textContent = scenarios[scenario].balance;
+  document.getElementById('settlementCard').style.display = 'block';
+  document.getElementById('successCard').classList.remove('show');
+  document.getElementById('paymentMethodDisplay').innerHTML = '<span style="color:var(--warning);">⏳ 待确认</span>';
+}
+
+function openPaymentModal() {
+  selectedPayment = null;
+  const s = scenarios[currentScenario];
+
+  document.getElementById('modalBalance').textContent = s.balance;
+  document.getElementById('modalRemaining').textContent = '—';
+  document.getElementById('modalRemaining').style.color = 'var(--gray-400)';
+  document.getElementById('balanceSufficientTag').textContent = s.tag;
+  document.getElementById('balanceSufficientTag').className = 'option-tag ' + s.tagClass;
+
+  // Reset input area
+  const input = document.getElementById('payAmountInput');
+  input.value = '';
+  input.classList.remove('error');
+  document.getElementById('amountInputRow').style.display = 'none';
+  document.getElementById('amountError').classList.remove('show');
+  document.getElementById('partialNote').style.display = 'none';
+  document.getElementById('amountHint').textContent = `最多可用 ${s.balance}`;
+
+  // Handle insufficient balance
+  const optionUse = document.getElementById('optionUse');
+  const warning = document.getElementById('balanceWarning');
+  if (!s.balanceSufficient) {
+    optionUse.classList.add('disabled');
+    warning.classList.add('show');
+  } else {
+    optionUse.classList.remove('disabled');
+    warning.classList.remove('show');
+  }
+
+  document.getElementById('optionUse').classList.remove('selected');
+  document.getElementById('optionNotUse').classList.remove('selected');
+  document.getElementById('confirmBtn').disabled = true;
+
+  if (currentScenario === 'notuse') {
+    setTimeout(() => selectPayment('notuse'), 400);
+  }
+
+  document.getElementById('paymentModal').classList.add('show');
+}
+
+function selectPayment(choice) {
+  const s = scenarios[currentScenario];
+  if (choice === 'use' && !s.balanceSufficient) return;
+
+  selectedPayment = choice;
+  document.getElementById('optionUse').classList.toggle('selected', choice === 'use');
+  document.getElementById('optionNotUse').classList.toggle('selected', choice === 'notuse');
+
+  const amountRow = document.getElementById('amountInputRow');
+  if (choice === 'use') {
+    amountRow.style.display = 'flex';
+    const input = document.getElementById('payAmountInput');
+    if (!input.value) {
+      // 预填结算金额（不超过余额）
+      input.value = Math.min(SETTLEMENT, s.balanceNum).toFixed(2);
+    }
+    onAmountInput(input);
+  } else {
+    amountRow.style.display = 'none';
+    document.getElementById('amountError').classList.remove('show');
+    document.getElementById('partialNote').style.display = 'none';
+    document.getElementById('modalRemaining').textContent = s.balance;
+    document.getElementById('modalRemaining').style.color = 'var(--gray-400)';
+    document.getElementById('confirmBtn').disabled = false;
+  }
+}
+
+function onAmountInput(input) {
+  const s = scenarios[currentScenario];
+  const val = parseFloat(input.value) || 0;
+  const maxUsable = Math.min(s.balanceNum, SETTLEMENT);
+
+  const errorEl = document.getElementById('amountError');
+  const remainingEl = document.getElementById('modalRemaining');
+  const partialNote = document.getElementById('partialNote');
+
+  let valid = true;
+  let errMsg = '';
+
+  if (val <= 0) {
+    valid = false; errMsg = '请输入大于 0 的金额';
+  } else if (val > s.balanceNum) {
+    valid = false; errMsg = `不能超过账户可用余额 ${s.balance}`;
+  } else if (val > SETTLEMENT) {
+    valid = false; errMsg = `不能超过本次结算金额 ${fmt(SETTLEMENT)}`;
+  }
+
+  input.classList.toggle('error', !valid);
+  errorEl.textContent = errMsg;
+  errorEl.classList.toggle('show', !valid);
+
+  if (valid) {
+    const afterBalance = s.balanceNum - val;
+    remainingEl.textContent = fmt(afterBalance);
+    remainingEl.style.color = afterBalance >= 0 ? 'var(--primary)' : 'var(--danger)';
+
+    if (val < SETTLEMENT) {
+      const leftover = SETTLEMENT - val;
+      partialNote.textContent = `剩余 ${fmt(leftover)} 将通过正常付款流程支付`;
+      partialNote.style.display = 'block';
+    } else {
+      partialNote.style.display = 'none';
+    }
+  }
+
+  document.getElementById('confirmBtn').disabled = !valid;
+}
+
+function confirmPayment() {
+  if (!selectedPayment) return;
+
+  const isUse = selectedPayment === 'use';
+  const s = scenarios[currentScenario];
+
+  let payAmt = SETTLEMENT;
+  let afterBalance = s.balanceNum;
+  if (isUse) {
+    payAmt = parseFloat(document.getElementById('payAmountInput').value) || SETTLEMENT;
+    afterBalance = s.balanceNum - payAmt;
+  }
+
+  document.getElementById('paymentModal').classList.remove('show');
+
+  document.getElementById('paymentMethodDisplay').innerHTML = isUse
+    ? '<span style="color:var(--primary);font-weight:600;">✅ 余额支付</span>'
+    : '<span style="color:var(--gray-600);font-weight:600;">✅ 正常付款</span>';
+
+  setTimeout(() => {
+    document.getElementById('settlementCard').style.display = 'none';
+    document.getElementById('successCard').classList.add('show');
+
+    if (isUse) {
+      const isPartial = payAmt < SETTLEMENT;
+      document.getElementById('successTitle').textContent = isPartial
+        ? '结算单创建成功 · 部分余额支付' : '结算单创建成功 · 余额支付';
+      document.getElementById('successSubtitle').textContent = isPartial
+        ? `余额支付 ${fmt(payAmt)}，剩余 ${fmt(SETTLEMENT - payAmt)} 通过正常付款流程支付。`
+        : `已从账户余额中扣减 ${fmt(payAmt)}，结算单状态流转至「余额支付中」。`;
+      document.getElementById('successPayment').textContent = isPartial ? `余额支付 ${fmt(payAmt)}` : '余额支付';
+      document.getElementById('successBalance').textContent = `${s.balance} → ${fmt(afterBalance)}`;
+    } else {
+      document.getElementById('successTitle').textContent = '结算单创建成功 · 正常付款';
+      document.getElementById('successSubtitle').textContent = '已选择正常付款流程，财务将按账期完成付款，账户余额不变。';
+      document.getElementById('successPayment').textContent = '正常付款';
+      document.getElementById('successBalance').textContent = `${s.balance}（不变）`;
+    }
+
+    showToast(isUse ? '✅ 已确认使用余额支付，结算单流转成功' : '✅ 已确认正常付款，结算单流转成功', true);
+  }, 300);
+}
+
+function resetDemo() {
+  selectedPayment = null;
+  document.getElementById('settlementCard').style.display = 'block';
+  document.getElementById('successCard').classList.remove('show');
+  document.getElementById('paymentMethodDisplay').innerHTML = '<span style="color:var(--warning);">⏳ 待确认</span>';
+  document.getElementById('balanceDisplay').textContent = scenarios[currentScenario].balance;
+}
+
+function showToast(msg, success = true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (success ? ' success' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
