@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>供应商信息登记（PC端） - Foodmax</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; background:#f0f7f6; color:#333; -webkit-font-smoothing:antialiased; min-height:100vh; }
+
+        /* === Header === */
+        .header { background:linear-gradient(135deg,#2d6a4f,#40916c); color:#fff; padding:32px 40px 26px; }
+        .header-inner { max-width:960px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; }
+        .header h1 { font-size:26px; font-weight:700; }
+        .header p { font-size:13px; opacity:.8; margin-top:4px; }
+        .header .buyer-tag { display:inline-block; background:rgba(255,255,255,.15); border-radius:20px; padding:6px 16px; font-size:12px; backdrop-filter:blur(4px); }
+
+        /* === Steps === */
+        .steps-bar { background:#fff; padding:18px 40px; display:flex; justify-content:center; align-items:center; gap:0; box-shadow:0 1px 4px rgba(0,0,0,.04); position:sticky; top:0; z-index:50; }
+        .step { display:flex; align-items:center; gap:8px; }
+        .step-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; transition:all .3s; cursor:pointer; }
+        .step-dot.active { background:#4ecdc4; color:#fff; box-shadow:0 2px 8px rgba(78,205,196,.3); }
+        .step-dot.done { background:#52c41a; color:#fff; }
+        .step-dot.done:hover { background:#73d13d; }
+        .step-dot.inactive { background:#e8e8e8; color:#999; }
+        .step-name { font-size:13px; color:#666; }
+        .step-line { width:60px; height:2px; background:#e8e8e8; margin:0 8px; }
+        .step-line.done { background:#52c41a; }
+
+        /* === Content === */
+        .content { max-width:960px; margin:0 auto; padding:24px 40px 40px; }
+
+        /* === Card === */
+        .card { background:#fff; border-radius:12px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,.05); overflow:hidden; }
+        .card-header { padding:16px 24px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:10px; }
+        .card-header .icon { font-size:18px; }
+        .card-header h3 { font-size:15px; font-weight:600; }
+        .card-body { padding:24px; }
+
+        /* === Form === */
+        .field { margin-bottom:20px; }
+        .field:last-child { margin-bottom:0; }
+        .field-label { font-size:13px; color:#666; margin-bottom:6px; display:block; }
+        .field-label .req { color:#ff4d4f; margin-right:2px; }
+        .field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .field-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+        input[type="text"], input[type="tel"], input[type="date"], input[type="email"], select, textarea {
+            width:100%; padding:10px 14px; border:1px solid #e0e0e0; border-radius:8px;
+            font-size:14px; transition:border-color .2s; background:#fff; -webkit-appearance:none;
+        }
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center; padding-right:36px;
+        }
+        input:focus, select:focus, textarea:focus { outline:none; border-color:#4ecdc4; box-shadow:0 0 0 3px rgba(78,205,196,.12); }
+        input:disabled, select:disabled { background:#f5f5f5; color:#999; }
+        textarea { resize:vertical; min-height:80px; }
+        .radio-group { display:flex; gap:16px; padding:6px 0; }
+        .radio-group label { display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer; }
+        .radio-group input[type="radio"] { width:16px; height:16px; accent-color:#4ecdc4; }
+        .select-row { display:flex; gap:8px; }
+        .select-row select { width:120px; flex-shrink:0; }
+        .select-row input { flex:1; }
+        .field-hint { font-size:11px; color:#999; margin-top:4px; }
+
+        /* === Upload === */
+        .upload-zone { border:2px dashed #d9d9d9; border-radius:10px; padding:32px; text-align:center; cursor:pointer; transition:all .2s; }
+        .upload-zone:hover { border-color:#4ecdc4; background:#f0fffe; }
+        .upload-zone .up-icon { font-size:36px; color:#ccc; margin-bottom:8px; }
+        .upload-zone p { font-size:13px; color:#999; }
+        .upload-zone .hint { font-size:11px; color:#bbb; margin-top:4px; }
+        .file-item { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#f6ffed; border-radius:6px; margin-top:8px; font-size:13px; }
+        .file-item .file-name { flex:1; color:#389e0d; }
+        .file-item .file-del { color:#ff4d4f; cursor:pointer; font-size:12px; }
+        .file-item .file-del:hover { text-decoration:underline; }
+
+        /* === Cert === */
+        .cert-row { background:#fafafa; border-radius:8px; padding:14px; margin-bottom:10px; }
+        .cert-row .cert-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .cert-row .cert-fields select, .cert-row .cert-fields input { font-size:13px; padding:8px 12px; }
+        .cert-row .cert-file { margin-top:8px; }
+
+        /* === Buttons === */
+        .btn-bar { padding:20px 0 40px; display:flex; justify-content:flex-end; gap:10px; }
+        .btn { padding:10px 32px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:all .15s; text-align:center; }
+        .btn-primary { background:#4ecdc4; color:#fff; }
+        .btn-primary:hover { background:#3db8b0; }
+        .btn-primary:active { transform:scale(.98); }
+        .btn-success { background:#52c41a; color:#fff; }
+        .btn-success:hover { background:#73d13d; }
+        .btn-draft { background:#f5f5f5; color:#666; }
+        .btn-draft:hover { background:#eee; }
+        .btn-back { background:transparent; color:#666; border:1px solid #d9d9d9; }
+        .btn-back:hover { color:#4ecdc4; border-color:#4ecdc4; }
+        .btn-outline-sm { background:#fff; color:#4ecdc4; border:1px solid #4ecdc4; padding:6px 16px; font-size:13px; border-radius:6px; cursor:pointer; }
+        .btn-outline-sm:hover { background:#f0fffe; }
+
+        /* === Review === */
+        .summary-section { margin-bottom:20px; }
+        .summary-section h4 { font-size:14px; font-weight:600; margin-bottom:10px; color:#333; }
+        .summary-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; }
+        .summary-item { padding:10px 4px; border-bottom:1px solid #f5f5f5; }
+        .summary-item .s-label { font-size:11px; color:#999; }
+        .summary-item .s-value { font-size:14px; color:#333; margin-top:2px; }
+
+        /* === Success === */
+        .success-view { text-align:center; padding:80px 20px 60px; }
+        .success-icon { font-size:64px; margin-bottom:16px; }
+        .success-view h2 { font-size:22px; margin-bottom:8px; }
+        .success-view p { color:#666; font-size:14px; margin-bottom:24px; }
+        .success-card { background:#fff; border-radius:12px; padding:24px; text-align:left; box-shadow:0 1px 4px rgba(0,0,0,.05); max-width:400px; margin:0 auto; }
+        .success-card p { font-size:14px; margin-bottom:6px; }
+
+        /* === Toast === */
+        .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#52c41a; color:#fff; padding:10px 24px; border-radius:8px; font-size:13px; z-index:200; display:none; box-shadow:0 4px 16px rgba(0,0,0,.12); }
+        .toast.show { display:block; animation:toastIn .3s ease; }
+        @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(-8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+        /* === Expired === */
+        .expired-view { text-align:center; padding:100px 20px; }
+        .expired-view .exp-icon { font-size:64px; margin-bottom:16px; color:#faad14; }
+        .expired-view h2 { font-size:22px; margin-bottom:8px; }
+        .expired-view p { color:#666; font-size:14px; }
+
+        /* === Platform tag === */
+        .platform-tag { position:fixed; bottom:12px; right:16px; background:rgba(0,0,0,.5); color:#fff; padding:4px 12px; border-radius:4px; font-size:11px; z-index:999; }
+    </style>
+</head>
+<body>
+    <div class="platform-tag">💻 PC 端原型</div>
+
+    <div class="header">
+        <div class="header-inner">
+            <div>
+                <h1>供应商信息登记</h1>
+                <p>Foodmax 采购供应商注册 · 请如实填写以下信息</p>
+            </div>
+            <div class="buyer-tag">采购对接人：沈亮 · 小满新加坡(SG Xiaoman) · SGD</div>
+        </div>
+    </div>
+
+    <div class="steps-bar" id="stepsBar">
+        <div class="step"><div class="step-dot active" id="sd1">1</div><span class="step-name">基本信息</span></div>
+        <div class="step-line done" id="sln0"></div>
+        <div class="step"><div class="step-dot inactive" id="sd2">2</div><span class="step-name">结算信息</span></div>
+        <div class="step-line" id="sln1"></div>
+        <div class="step"><div class="step-dot inactive" id="sd3">3</div><span class="step-name">资质附件</span></div>
+        <div class="step-line" id="sln2"></div>
+        <div class="step"><div class="step-dot inactive" id="sd4">4</div><span class="step-name">确认提交</span></div>
+    </div>
+
+    <div class="content">
+        <!-- Step 1 -->
+        <div id="step-1">
+            <div class="card">
+                <div class="card-header"><span class="icon">🏢</span><h3>企业基本信息</h3></div>
+                <div class="card-body">
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>供应商名称</label>
+                            <input type="text" placeholder="供应商名称（中文）">
+                        </div>
+                        <div class="field">
+                            <label class="field-label">供应商名称（英文）</label>
+                            <input type="text" placeholder="English name">
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field-label">供应商简称</label>
+                            <input type="text" placeholder="简称">
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>定价方式</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="pricing" value="含税"> 含税</label>
+                                <label><input type="radio" name="pricing" value="不含税"> 不含税</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="field-label"><span class="req">*</span>供应商地址</label>
+                        <input type="text" placeholder="详细地址">
+                    </div>
+                    <div class="field-row-3">
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>联系人</label>
+                            <input type="text" placeholder="联系人名称">
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>电话号码</label>
+                            <div class="select-row">
+                                <select style="width:90px;"><option>+65</option><option>+86</option><option>+60</option><option>+62</option></select>
+                                <input type="tel" placeholder="电话号码">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field-label">邮箱</label>
+                            <input type="email" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div class="field-row-3">
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>供应商单位类型</label>
+                            <select><option value="">请选择</option><option>有限责任公司</option><option>股份有限公司</option><option>个体工商户</option><option>合伙企业</option></select>
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>纳税人类型</label>
+                            <select><option value="">请选择</option><option>一般纳税人</option><option>小规模纳税人</option></select>
+                        </div>
+                        <div class="field">
+                            <label class="field-label">是否农业生产者</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="agri" value="否"> 否</label>
+                                <label><input type="radio" name="agri" value="是"> 是</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>唯一码识别号类型</label>
+                            <select><option value="">请选择</option><option>统一社会信用代码</option><option>组织机构代码</option><option>营业执照注册号</option></select>
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>纳税人识别号</label>
+                            <input type="text" placeholder="18位纳税人识别号" onchange="checkTaxId(this)">
+                            <div id="taxDupWarn" style="display:none;color:#ff4d4f;font-size:12px;margin-top:6px;">⚠ 该识别号已存在于系统中，请确认是否重复建档</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-bar">
+                <button class="btn btn-draft" onclick="showToast('草稿已保存')">保存草稿</button>
+                <button class="btn btn-primary" onclick="goStep(2)">下一步：结算信息 →</button>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="step-2" style="display:none;">
+            <div class="card">
+                <div class="card-header"><span class="icon">💰</span><h3>结算信息</h3></div>
+                <div class="card-body">
+                    <div class="field-row-3">
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>付款类型</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="payment" value="后付费"> 后付费</label>
+                                <label><input type="radio" name="payment" value="预付费"> 预付费</label>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>结算方式</label>
+                            <select><option value="">请选择</option><option>月结</option><option>半月结</option><option>周结</option></select>
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>结算币种</label>
+                            <select><option selected>SGD 新加坡元</option><option>CNY 人民币</option><option>USD 美元</option><option>MYR 马来西亚林吉特</option><option>IDR 印尼盾</option></select>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field-label">财务联系人</label>
+                            <input type="text" placeholder="财务联系人名称">
+                        </div>
+                        <div class="field">
+                            <label class="field-label">财务联系方式</label>
+                            <input type="tel" placeholder="电话或邮箱">
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>账户名称</label>
+                            <input type="text" placeholder="账户名称（中文）">
+                        </div>
+                        <div class="field">
+                            <label class="field-label">账户名称（英文）</label>
+                            <input type="text" placeholder="Account holder name">
+                        </div>
+                    </div>
+                    <div class="field-row-3">
+                        <div class="field">
+                            <label class="field-label">SWIFT 代码</label>
+                            <input type="text" placeholder="SWIFT code" style="text-transform:uppercase;">
+                        </div>
+                        <div class="field">
+                            <label class="field-label">所属国家</label>
+                            <select><option>新加坡</option><option>中国</option><option>马来西亚</option><option>印度尼西亚</option><option>其他</option></select>
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>银行收款号</label>
+                            <input type="text" placeholder="银行账号/收款号">
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field-label"><span class="req">*</span>银行大类</label>
+                            <select><option value="">请选择</option><option>OCBC 华侨银行</option><option>DBS 星展银行</option><option>UOB 大华银行</option><option>BOC 中国银行</option><option>ICBC 工商银行</option><option>其他</option></select>
+                        </div>
+                        <div class="field">
+                            <label class="field-label">银行支行</label>
+                            <input type="text" placeholder="支行名称">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-bar">
+                <button class="btn btn-back" onclick="goStep(1)">← 上一步</button>
+                <button class="btn btn-draft" onclick="showToast('草稿已保存')">保存草稿</button>
+                <button class="btn btn-primary" onclick="goStep(3)">下一步：资质附件 →</button>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div id="step-3" style="display:none;">
+            <div class="card">
+                <div class="card-header"><span class="icon">📋</span><h3>资质证明</h3></div>
+                <div class="card-body">
+                    <p style="font-size:12px;color:#999;margin-bottom:14px;">请上传企业资质，支持 PDF/JPG/PNG，单文件 ≤10MB</p>
+                    <div class="cert-row">
+                        <div class="cert-fields">
+                            <select><option>营业执照</option><option>食品经营许可证</option><option>卫生许可证</option><option>进出口许可证</option><option>其他</option></select>
+                            <input type="date" placeholder="有效期至">
+                        </div>
+                        <div class="cert-file">
+                            <div class="file-item">
+                                <span class="file-name">营业执照.pdf</span>
+                                <span style="color:#52c41a;">✓</span>
+                                <span class="file-del" onclick="showToast('已删除')">删除</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-outline-sm" onclick="showToast('已添加一行资质')">+ 添加资质</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="icon">📎</span><h3>附件资源</h3></div>
+                <div class="card-body">
+                    <div class="upload-zone" onclick="showToast('已选择文件（原型演示）')">
+                        <div class="up-icon">📤</div>
+                        <p>点击上传或将文件拖拽至此</p>
+                        <div class="hint">支持 PDF、Word、Excel、图片</div>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-bar">
+                <button class="btn btn-back" onclick="goStep(2)">← 上一步</button>
+                <button class="btn btn-draft" onclick="showToast('草稿已保存')">保存草稿</button>
+                <button class="btn btn-primary" onclick="goStep(4)">下一步：确认提交 →</button>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div id="step-4" style="display:none;">
+            <div class="card">
+                <div class="card-header"><span class="icon">✅</span><h3>信息确认</h3></div>
+                <div class="card-body">
+                    <p style="font-size:13px;color:#666;margin-bottom:18px;">请确认以下信息无误后提交：</p>
+                    <div class="summary-section">
+                        <h4>🏢 企业基本信息</h4>
+                        <div class="summary-grid">
+                            <div class="summary-item"><div class="s-label">供应商名称</div><div class="s-value">鲜达农产品有限公司</div></div>
+                            <div class="summary-item"><div class="s-label">联系人</div><div class="s-value">张经理</div></div>
+                            <div class="summary-item"><div class="s-label">电话号码</div><div class="s-value">+65 9123 4567</div></div>
+                            <div class="summary-item"><div class="s-label">地址</div><div class="s-value">Jurong East St 21 #03-05</div></div>
+                            <div class="summary-item"><div class="s-label">纳税人类型</div><div class="s-value">一般纳税人</div></div>
+                            <div class="summary-item"><div class="s-label">定价方式</div><div class="s-value">含税</div></div>
+                        </div>
+                    </div>
+                    <div class="summary-section">
+                        <h4>💰 结算信息</h4>
+                        <div class="summary-grid">
+                            <div class="summary-item"><div class="s-label">付款类型</div><div class="s-value">后付费</div></div>
+                            <div class="summary-item"><div class="s-label">结算方式</div><div class="s-value">月结</div></div>
+                            <div class="summary-item"><div class="s-label">结算币种</div><div class="s-value">SGD</div></div>
+                            <div class="summary-item"><div class="s-label">银行</div><div class="s-value">OCBC ****5678</div></div>
+                        </div>
+                    </div>
+                    <div class="summary-section">
+                        <h4>📋 资质证明</h4>
+                        <div class="summary-item"><div class="s-value">营业执照.pdf · 有效期至 2028-12-31</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-bar">
+                <button class="btn btn-back" onclick="goStep(3)">← 返回修改</button>
+                <button class="btn btn-success" onclick="submitForm()">确认提交</button>
+            </div>
+        </div>
+
+        <!-- Success -->
+        <div id="step-success" style="display:none;">
+            <div class="success-view">
+                <div class="success-icon">✅</div>
+                <h2>提交成功</h2>
+                <p>您的信息已提交，采购人员将在 1-3 个工作日内完成审核。</p>
+                <div class="success-card">
+                    <p><strong>提交摘要</strong></p>
+                    <p style="margin-top:14px;"><strong>供应商：</strong>鲜达农产品有限公司</p>
+                    <p><strong>提交时间：</strong>2026-04-13 15:30</p>
+                    <p><strong>对接采购：</strong>沈亮</p>
+                    <p><strong>邀请编号：</strong>INV-20260413-001</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expired / Invalid states -->
+        <div id="step-expired" style="display:none;">
+            <div class="expired-view">
+                <div class="exp-icon">⏰</div>
+                <h2>链接已过期</h2>
+                <p>此供应商注册链接已超过有效期（有效期为 7 天），无法继续填写。</p>
+                <p style="margin-top:12px;color:#333;">请联系采购对接人获取新的注册链接。</p>
+                <div style="margin-top:24px;padding:20px;background:#f9f9f9;border-radius:8px;display:inline-block;text-align:left;">
+                    <div style="font-size:13px;color:#999;margin-bottom:8px;">采购对接人</div>
+                    <div style="font-size:16px;font-weight:600;">张芬</div>
+                    <div style="font-size:13px;color:#666;margin-top:4px;">DD鲜食新加坡 · SGD</div>
+                    <div style="font-size:13px;color:#666;margin-top:4px;">邀请码：20260418ZYSV</div>
+                </div>
+                <p style="margin-top:20px;font-size:12px;color:#999;">如需帮助，请通过采购对接人重新发起邀请</p>
+            </div>
+        </div>
+
+        <div id="step-submitted" style="display:none;">
+            <div class="expired-view">
+                <div class="exp-icon" style="color:#52c41a;">✅</div>
+                <h2>该链接已提交过注册信息</h2>
+                <p>您已通过此链接完成供应商信息登记，无需重复提交。</p>
+                <div style="margin-top:24px;padding:20px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;display:inline-block;text-align:left;">
+                    <div style="font-size:13px;color:#999;margin-bottom:4px;">提交时间</div>
+                    <div style="font-size:14px;font-weight:500;">2026-04-18 17:33</div>
+                    <div style="font-size:13px;color:#999;margin-top:10px;margin-bottom:4px;">当前状态</div>
+                    <div style="font-size:14px;font-weight:500;color:#52c41a;">审核中（预计 1-3 个工作日）</div>
+                </div>
+                <p style="margin-top:20px;font-size:12px;color:#999;">如需修改已提交的信息，请联系采购对接人</p>
+            </div>
+        </div>
+
+        <div id="step-invalid" style="display:none;">
+            <div class="expired-view">
+                <div class="exp-icon" style="color:#ff4d4f;">❌</div>
+                <h2>链接无效</h2>
+                <p>该注册链接无效或已被撤销，无法访问。</p>
+                <p style="margin-top:12px;color:#333;">请确认链接是否正确，或联系采购人员重新获取。</p>
+                <p style="margin-top:20px;font-size:12px;color:#999;">错误代码：INVITE_CODE_INVALID</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- 原型状态切换栏（仅原型演示用） -->
+    <div style="position:fixed;bottom:0;left:0;right:0;background:#1a1a2e;color:#fff;padding:10px 24px;display:flex;align-items:center;gap:12px;z-index:9999;font-size:12px;">
+        <span style="color:#999;margin-right:4px;">🎨 原型状态切换：</span>
+        <button onclick="showState('normal')" style="padding:4px 12px;border-radius:4px;border:1px solid #555;background:#333;color:#fff;cursor:pointer;">正常填写流程</button>
+        <button onclick="showState('expired')" style="padding:4px 12px;border-radius:4px;border:1px solid #faad14;background:#faad14;color:#000;cursor:pointer;font-weight:600;">⏰ 链接已过期</button>
+        <button onclick="showState('submitted')" style="padding:4px 12px;border-radius:4px;border:1px solid #52c41a;background:#52c41a;color:#fff;cursor:pointer;font-weight:600;">✅ 已提交过</button>
+        <button onclick="showState('invalid')" style="padding:4px 12px;border-radius:4px;border:1px solid #ff4d4f;background:#ff4d4f;color:#fff;cursor:pointer;font-weight:600;">❌ 链接无效</button>
+    </div>
+
+    <script>
+        let cur = 1;
+        const allSteps = ['step-1','step-2','step-3','step-4','step-success','step-expired','step-submitted','step-invalid'];
+
+        function hideAll(){
+            allSteps.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+        }
+
+        function showState(state){
+            hideAll();
+            const stepsBar = document.getElementById('stepsBar');
+            if(state==='normal'){
+                stepsBar.style.display='';
+                document.getElementById('step-1').style.display='block';
+                cur=1;
+                for(let i=1;i<=4;i++){
+                    const d=document.getElementById('sd'+i);
+                    const l=document.getElementById('sln'+(i-1));
+                    if(i===1){ d.className='step-dot active'; d.textContent='1'; }
+                    else{ d.className='step-dot inactive'; d.textContent=i; }
+                    if(l) l.className='step-line';
+                }
+            } else {
+                stepsBar.style.display='none';
+                document.getElementById('step-'+state).style.display='block';
+            }
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+
+        function goStep(n) {
+            document.getElementById('step-'+cur).style.display='none';
+            document.getElementById('step-'+n).style.display='block';
+            for(let i=1;i<=4;i++){
+                const d=document.getElementById('sd'+i);
+                const l=document.getElementById('sln'+(i-1));
+                if(i<n){ d.className='step-dot done'; d.textContent='✓'; if(l)l.className='step-line done'; }
+                else if(i===n){ d.className='step-dot active'; d.textContent=i; if(l)l.className='step-line done'; }
+                else{ d.className='step-dot inactive'; d.textContent=i; if(l)l.className='step-line'; }
+            }
+            cur=n;
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+        function submitForm(){
+            document.getElementById('step-4').style.display='none';
+            document.getElementById('stepsBar').style.display='none';
+            document.getElementById('step-success').style.display='block';
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+        function showToast(msg){
+            const t=document.getElementById('toast');
+            t.textContent=msg; t.classList.add('show');
+            setTimeout(()=>t.classList.remove('show'),2000);
+        }
+        function checkTaxId(input) {
+            const val = input.value.trim();
+            const warn = document.getElementById('taxDupWarn');
+            if(val.length===18 && val.startsWith('91310000')){ warn.style.display='block'; input.style.borderColor='#ff4d4f'; }
+            else{ warn.style.display='none'; input.style.borderColor=''; }
+        }
+    </script>
+</body>
+</html>
